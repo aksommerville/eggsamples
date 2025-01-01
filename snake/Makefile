@@ -7,10 +7,10 @@ ifneq (,$(strip $(filter clean,$(MAKECMDGOALS))))
 clean:;rm -rf mid out
 else
 
-OPT_ENABLE:=stdlib graf text rom
-PROJNAME:=hello_world
-PROJRDNS:=com.aksommerville.eggsamples.hello_world
-ENABLE_SERVER_AUDIO:=
+OPT_ENABLE:=
+PROJNAME:=snake
+PROJRDNS:=com.aksommerville.eggsamples.snake
+ENABLE_SERVER_AUDIO:=1
 BUILDABLE_DATA_TYPES:=
 
 ifndef EGG_SDK

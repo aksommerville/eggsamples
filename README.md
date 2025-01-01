@@ -16,6 +16,12 @@ If that fails, confirm that `...egg/out/eggdev` exists, and check your `EGG_SDK`
 Nothing interesting, basically just what `eggdev project` produces.
 A fair starting point, but you might as well call eggdev yourself for a fresh one.
 
+### snake
+
+The familiar Snake game.
+Implemented without Egg's client runtime helpers, not even stdlib.
+So this demonstrates a bare-minimum C game.
+
 ## TODO
 
 - [ ] Shoot-em-up

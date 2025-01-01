@@ -1,0 +1,15 @@
+fb=248x168
+title=Snake
+title$=2
+author=AK Sommerville
+time=2025-01-01
+version=0.0.1
+lang=en
+players=1
+desc=Eat snake-snacks and grow, until you are crushed by your own weight.
+freedom=free
+copyright=(c) 2025 AK Sommrville
+genre=Action
+tags=2D,Arcade
+iconImage=2
+contact=aksommerville@gmail.com
