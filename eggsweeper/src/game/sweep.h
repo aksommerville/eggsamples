@@ -9,7 +9,7 @@
 #include "shared_symbols.h"
 
 #define FBW 320
-#define FBH 240
+#define FBH 248
 
 /* For now at least, we're not doing adjustable difficulty.
  * The field size and egg count are constant.
@@ -50,6 +50,8 @@ extern struct g {
   int cursorframe; // 0..3
   double cursorclock;
   int running;
+  int victory;
+  int flagc;
 } g;
 
 // sweep.c

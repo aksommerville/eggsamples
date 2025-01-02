@@ -22,7 +22,9 @@ void sweep_reset() {
   int i=EGGC; while (i-->0) sweep_add_random_egg();
   g.selx=COLC>>1;
   g.sely=ROWC>>1;
+  g.flagc=0;
   g.running=1;
+  g.victory=0;
 }
 
 /* Lose game: Reveal all of the false flags and missed eggs, and set g.running false.
@@ -30,6 +32,7 @@ void sweep_reset() {
  
 static void sweep_lose() {
   g.running=0;
+  g.victory=0;
   uint8_t *v=g.map;
   int i=COLC*ROWC;
   for (;i-->0;v++) {
@@ -56,6 +59,7 @@ static void sweep_check_victory() {
   }
   egg_play_sound(RID_sound_win);
   g.running=0;
+  g.victory=1;
 }
 
 /* How many eggs adjacent to this cell? 0..8, no errors
@@ -144,10 +148,10 @@ void sweep_expose() {
 void sweep_flag() {
   int p=g.sely*COLC+g.selx;
   switch (g.map[p]) {
-    case TILE_HIDDEN_EMPTY: egg_play_sound(RID_sound_flag); g.map[p]=TILE_FLAG_EMPTY; break;
-    case TILE_HIDDEN_EGG: egg_play_sound(RID_sound_flag); g.map[p]=TILE_FLAG_EGG; sweep_check_victory(); break;
-    case TILE_FLAG_EMPTY: egg_play_sound(RID_sound_unflag); g.map[p]=TILE_HIDDEN_EMPTY; sweep_check_victory(); break;
-    case TILE_FLAG_EGG: egg_play_sound(RID_sound_unflag); g.map[p]=TILE_HIDDEN_EGG; break;
+    case TILE_HIDDEN_EMPTY: egg_play_sound(RID_sound_flag); g.map[p]=TILE_FLAG_EMPTY; g.flagc++; break;
+    case TILE_HIDDEN_EGG: egg_play_sound(RID_sound_flag); g.map[p]=TILE_FLAG_EGG; g.flagc++; sweep_check_victory(); break;
+    case TILE_FLAG_EMPTY: egg_play_sound(RID_sound_unflag); g.map[p]=TILE_HIDDEN_EMPTY; g.flagc--; sweep_check_victory(); break;
+    case TILE_FLAG_EGG: egg_play_sound(RID_sound_unflag); g.map[p]=TILE_HIDDEN_EGG; g.flagc--; break;
     default: egg_play_sound(RID_sound_reject);
   }
 }

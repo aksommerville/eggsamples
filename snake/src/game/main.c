@@ -170,9 +170,11 @@ void egg_client_render() {
 
 /* We're building without libc, but I guess clang inserts calls to memset somewhere, and then doesn't insert an implementation.
  */
+#if !USE_REAL_STDLIB
 typedef int size_t;
 void *memset(void *v,int ch,size_t c) {
   uint8_t *V=v;
   for (;c-->0;V++) *V=ch;
   return v;
 }
+#endif

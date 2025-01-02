@@ -52,11 +52,30 @@ void egg_client_update(double elapsed) {
 }
 
 void egg_client_render() {
+  const int status_bar_height=8;
   int texid=texcache_get_image(&g.texcache,RID_image_tiles);
   graf_reset(&g.graf);
   
-  graf_draw_tile_buffer(&g.graf,texid,NS_sys_tilesize>>1,NS_sys_tilesize>>1,g.map,COLC,ROWC,COLC);
+  /* Status bar: A row of eggs or flags at the top, telling you how much outstanding.
+   */
+  graf_draw_rect(&g.graf,0,0,FBW,status_bar_height,0x000000ff);
+  uint8_t tileid=0x10;
+  int iconc=EGGC-g.flagc;
+  if (iconc<0) {
+    tileid=0x11;
+    iconc=-iconc;
+  }
+  int16_t dstx=4,dsty=status_bar_height>>1;
+  for (;iconc-->0;dstx+=8) {
+    graf_draw_tile(&g.graf,texid,dstx,dsty,tileid,0);
+  }
   
+  /* The main event.
+   */
+  graf_draw_tile_buffer(&g.graf,texid,NS_sys_tilesize>>1,status_bar_height+(NS_sys_tilesize>>1),g.map,COLC,ROWC,COLC);
+  
+  /* Animated cursor.
+   */
   if (g.running) {
     uint8_t cursorxform=0;
     switch (g.cursorframe) {
@@ -65,7 +84,27 @@ void egg_client_render() {
       case 2: cursorxform=EGG_XFORM_XREV|EGG_XFORM_YREV; break;
       case 3: cursorxform=EGG_XFORM_YREV|EGG_XFORM_SWAP; break;
     }
-    graf_draw_tile(&g.graf,texid,g.selx*NS_sys_tilesize+(NS_sys_tilesize>>1),g.sely*NS_sys_tilesize+(NS_sys_tilesize>>1),TILE_CURSOR,cursorxform);
+    graf_draw_tile(&g.graf,texid,g.selx*NS_sys_tilesize+(NS_sys_tilesize>>1),status_bar_height+g.sely*NS_sys_tilesize+(NS_sys_tilesize>>1),TILE_CURSOR,cursorxform);
+  }
+  
+  /* Final message.
+   */
+  if (!g.running) {
+    int16_t srcx,srcy,srcw,srch;
+    if (g.victory) {
+      srcx=0;
+      srcy=NS_sys_tilesize*2;
+      srcw=NS_sys_tilesize*7;
+      srch=NS_sys_tilesize*3;
+    } else {
+      srcx=NS_sys_tilesize*7;
+      srcy=NS_sys_tilesize*2;
+      srcw=NS_sys_tilesize*3;
+      srch=NS_sys_tilesize*3;
+    }
+    int16_t dstx=(FBW>>1)-(srcw>>1);
+    int16_t dsty=(FBH>>1)-(srch>>1);
+    graf_draw_decal(&g.graf,texid,dstx,dsty,srcx,srcy,srcw,srch,0);
   }
   
   graf_flush(&g.graf);
