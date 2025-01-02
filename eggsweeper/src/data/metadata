@@ -1,0 +1,14 @@
+fb=320x240
+title=Eggsweeper
+title$=2
+author=AK Sommerville
+time=2025-01-01
+version=0.0.1
+lang=en
+players=1
+desc=Minesweeper clone.
+freedom=free
+copyright=(c) 2025 AK Sommerville
+genre=Puzzle
+iconImage=2
+contact=aksommerville@gmail.com

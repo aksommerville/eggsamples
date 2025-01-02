@@ -22,12 +22,28 @@ The familiar Snake game.
 Implemented without Egg's client runtime helpers, not even stdlib.
 So this demonstrates a bare-minimum C game.
 
+### eggsweeper
+
+Minesweeper clone.
+
 ## TODO
 
-- [ ] Shoot-em-up
-- [ ] Formal RPG
-- [ ] Adventure
-- [ ] Platformer
-- [ ] Something in WAT instead of C.
-- [ ] Rhythm
-- [ ] Beat-em-up with Paper Mario style graphics.
+- Implement some well-known styles, building out specific framework as needed:
+- - [ ] Formal RPG
+- - [ ] Adventure
+- - [ ] Platformer
+- - [ ] Rhythm
+- - [ ] Visual novel
+- - [ ] Fighting
+- - [ ] Orthographic Racing
+- Clone some familiar games, ones that aren't too involved:
+- - [x] Snake
+- - [ ] Tetris
+- - [ ] Minesweeper
+- - [ ] Sudoku
+- - [ ] Picross
+- - [ ] Space Invaders
+- Technical demos, proving out questions:
+- - [x] Build without libc (snake)
+- - [ ] Something in WAT instead of C.
+- - [ ] Beat-em-up with Paper Mario style graphics.
