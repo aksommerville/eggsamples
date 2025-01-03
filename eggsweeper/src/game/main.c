@@ -29,7 +29,32 @@ int egg_client_init() {
   return 0;
 }
 
+static int centermost_hidden_tile(const uint8_t *map) {
+  #define HIDDEN(x,y) ({ int _tileid=map[(y)*COLC+(x)]; ((_tileid==TILE_HIDDEN_EMPTY)||(_tileid==TILE_HIDDEN_EGG)); })
+  if (HIDDEN(COLC>>1,ROWC>>1)) return (ROWC>>1)*COLC+(COLC>>1);
+  int radius=1,limit=(COLC+1)>>1;
+  for (;radius<=limit;radius++) {
+    int ya=(ROWC>>1)-radius;
+    int yz=(ROWC>>1)+radius;
+    int xa=(COLC>>1)-radius;
+    int xz=(COLC>>1)-radius;
+    int yac=(ya<0)?0:ya;
+    int yzc=(yz>=ROWC)?(ROWC-1):yz;
+    int xac=(xa<0)?0:xa;
+    int xzc=(xz>=COLC)?(COLC-1):xz;
+    int ok=0;
+    if (ya>=0) { ok=1; int x=xac; for (;x<=xzc;x++) if (HIDDEN(x,ya)) return ya*COLC+x; }
+    if (yz<ROWC) { ok=1; int x=xac; for (;x<xzc;x++) if (HIDDEN(x,yz)) return yz*COLC+x; }
+    if (xa>=0) { ok=1; int y=yac; for (;y<yzc;y++) if (HIDDEN(xa,y)) return y*COLC+xa; }
+    if (xz<COLC) { ok=1; int y=yac; for (;y<yzc;y++) if (HIDDEN(xz,y)) return y*COLC+xz; }
+    if (!ok) break;
+  }
+  #undef HIDDEN
+  return -1;
+}
+
 void egg_client_update(double elapsed) {
+
   int input=egg_input_get_one(0);
   if (input!=g.pvinput) {
     if ((input&EGG_BTN_AUX3)&&!(g.pvinput&EGG_BTN_AUX3)) egg_terminate(0);
@@ -45,10 +70,44 @@ void egg_client_update(double elapsed) {
     }
     g.pvinput=input;
   }
+  
   if ((g.cursorclock-=elapsed)<=0.0) {
     g.cursorclock+=0.200;
     if (++(g.cursorframe)>=4) g.cursorframe=0;
   }
+  
+  if ((AUTOPLAY>0.0)&&g.running&&!g.suspend) {
+    g.autoplay_clock+=elapsed;
+    while (g.autoplay_clock>=AUTOPLAY) {
+      g.autoplay_clock-=AUTOPLAY;
+      int choice=autosolve(g.map);
+      if (choice<0) {
+        choice=-choice-1;
+        if (choice>=COLC*ROWC) {
+          sweep_lose();
+        } else {
+          g.selx=choice%COLC;
+          g.sely=choice/COLC;
+          sweep_flag();
+        }
+      } else if (choice>=COLC*ROWC) {
+        // Not solvable, click on any hidden tile. Work from the inside out, so it's repeatable.
+        int p=centermost_hidden_tile(g.map);
+        if (p<0) {
+          sweep_lose();
+        } else {
+          g.selx=p%COLC;
+          g.sely=p/COLC;
+          sweep_expose();
+        }
+      } else {
+        g.selx=choice%COLC;
+        g.sely=choice/COLC;
+        sweep_expose();
+      }
+    }
+  }
+  /**/
 }
 
 void egg_client_render() {

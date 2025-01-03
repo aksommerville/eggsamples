@@ -8,6 +8,11 @@
 #include "egg_rom_toc.h"
 #include "shared_symbols.h"
 
+/* >0 to let the CPU play; it's the interval between plays.
+ * Player can still interfere.
+ */
+#define AUTOPLAY 0.0
+
 #define FBW 320
 #define FBH 248
 
@@ -50,8 +55,10 @@ extern struct g {
   int cursorframe; // 0..3
   double cursorclock;
   int running;
+  int suspend;
   int victory;
   int flagc;
+  double autoplay_clock; // Counts up.
 } g;
 
 // sweep.c
@@ -59,5 +66,26 @@ void sweep_reset();
 void sweep_move(int dx,int dy);
 void sweep_expose();
 void sweep_flag(); // toggle
+void sweep_lose();
+void sweep_expose_empty_tile(uint8_t *map,int x,int y);
+
+/* autosolve.c
+ * Returns one of:
+ *  - COLC*ROWC: Not solvable.
+ *  - -COLC*ROWC-1: Invalid. Only happens in certain false-flag cases.
+ *  - COLC*ROWC+1: Already solved.
+ *  - 0..(COLC*ROWC-1): Expose a cell.
+ *  - -1..(-COLC*ROWC): Flag cell (-n-1).
+ * Does not read or modify any globals, or modify the provided map.
+ */
+int autosolve(const uint8_t *map);
+
+/* autosolve.c
+ * When the map is unsolvable and (x,y) is TILE_HIDDEN_EGG,
+ * look for somewhere we can move this egg to, such that all exposed clues remain valid.
+ * If that's possible, do it and return >=0.
+ * <0 if we can't.
+ */
+int autosolve_repair(int x,int y);
 
 #endif

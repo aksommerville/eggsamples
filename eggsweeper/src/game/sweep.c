@@ -1,5 +1,69 @@
 #include "sweep.h"
 
+/* Encode map to a simple text string, so we can replay later for troubleshooting.
+ */
+ 
+#define ENCODED_MAP_LENGTH ((COLC*ROWC+5)/6)
+ 
+static void sweep_explicit_map(const char *src) {
+  const char *src0=src;
+  memset(g.map,TILE_HIDDEN_EMPTY,COLC*ROWC);
+  uint8_t *dst=g.map;
+  int i=COLC*ROWC;
+  uint8_t buf,mask;
+  #define NEXT { \
+         if ((*src>='A')&&(*src<='Z')) buf=(*src)-'A'; \
+    else if ((*src>='a')&&(*src<='z')) buf=(*src)-'a'+26; \
+    else if ((*src>='0')&&(*src<='9')) buf=(*src)-'0'+52; \
+    else if (*src=='_') buf=62; \
+    else if (*src=='-') buf=63; \
+    else return; \
+    src++; \
+    mask=1; \
+  }
+  NEXT
+  int eggc=0;
+  for (;i-->0;dst++,mask<<=1) {
+    if (mask>=0x40) NEXT
+    if (buf&mask) {
+      *dst=TILE_HIDDEN_EGG;
+      eggc++;
+    }
+  }
+  #undef NEXT
+  fprintf(stderr,"Restored map: %s ; eggc=%d\n",src0,eggc);
+}
+
+static void sweep_log_map() {
+  char encoded[ENCODED_MAP_LENGTH];
+  int encodedc=0;
+  uint8_t buf=0,mask=1;
+  const uint8_t *v=g.map;
+  int i=COLC*ROWC;
+  for (;i-->0;v++) {
+    if (*v==TILE_HIDDEN_EGG) buf|=mask;
+    if ((mask<<=1)>=0x40) {
+      if (encodedc>=sizeof(encoded)) {
+        fprintf(stderr,"%s:%d: ENCODED_MAP_LENGTH too small!\n",__FILE__,__LINE__);
+        return;
+      }
+      encoded[encodedc++]=
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz"
+        "0123456789_-"[buf];
+      buf=0;
+      mask=1;
+    }
+  }
+  if ((mask!=1)&&(encodedc<sizeof(encoded))) {
+    encoded[encodedc++]=
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+      "abcdefghijklmnopqrstuvwxyz"
+      "0123456789_-"[buf];
+  }
+  fprintf(stderr,"%s: %.*s\n",__func__,encodedc,encoded);
+}
+
 /* Put an egg somewhere.
  */
  
@@ -18,19 +82,36 @@ static void sweep_add_random_egg() {
  */
  
 void sweep_reset() {
-  memset(g.map,TILE_HIDDEN_EMPTY,COLC*ROWC);
-  int i=EGGC; while (i-->0) sweep_add_random_egg();
+  if (0) { // For debugging, enable explicit map here.
+    // iMQAASACACAIAABoAwEAsBQBAAAAAIIEAAHABEyBggCAAAAIEg : autosolve started in the upper-right, flagged one egg, then gave up. ...fixed
+    // gAAEAIAEoAAEgJAACVQgRJAEQAAkoAABDCBAAAAAIACAgIQgoQ : Needs to guess immediately.
+    // IIAQAACgAQgAFxIzAEoAAAEABQYAAAAAEiCAAAAAEAgGAAGTiA : Solvable but autosolve fails ...fixed
+    // AGABFBAggA4IwAABBERAAARCFgAAAAAEAoCAAEAQKAQoEBAAIQ : Autosolve places an incorrect flag at 6,0 ...fixed
+    // CACIEIGAkIAAAJEAigAEAASUAgIgIAgAABAUAAEEBQKICCBAQA ; UNSOLVABLE? Autosolve incorrectly determines the upper-right to be unsolvable. It's solvable in light of the flag count.
+    //                                                      The lower region is a classic unsolvable foursquare.
+    //                                                      !!! If I solve the upper part first, then guess wrong, we think the bottom is solvable (and we would have played wrong on it).
+    //                                                      ...fixed
+    //                                                      Still not solving every case but I think it's close enough. Undersolving works to the players' benefit.
+    //                                                      Now we need autosolve_repair() to work for these weird cases, still a fair test case for it. ...fixed
+    sweep_explicit_map("gAAEAIAEoAAEgJAACVQgRJAEQAAkoAABDCBAAAAAIACAgIQgoQ");
+  } else {
+    memset(g.map,TILE_HIDDEN_EMPTY,COLC*ROWC);
+    int i=EGGC; while (i-->0) sweep_add_random_egg();
+    sweep_log_map();
+  }
   g.selx=COLC>>1;
   g.sely=ROWC>>1;
   g.flagc=0;
   g.running=1;
+  g.suspend=0;
   g.victory=0;
+  g.autoplay_clock=0.0;
 }
 
 /* Lose game: Reveal all of the false flags and missed eggs, and set g.running false.
  */
  
-static void sweep_lose() {
+void sweep_lose() {
   g.running=0;
   g.victory=0;
   uint8_t *v=g.map;
@@ -65,7 +146,7 @@ static void sweep_check_victory() {
 /* How many eggs adjacent to this cell? 0..8, no errors
  */
  
-static int sweep_count_eggs(int x,int y) {
+static int sweep_count_eggs(const uint8_t *map,int x,int y) {
   int c=0;
   int dx=-1; for (;dx<=1;dx++) {
     int ox=x+dx;
@@ -75,7 +156,7 @@ static int sweep_count_eggs(int x,int y) {
       int oy=y+dy;
       if ((oy<0)||(oy>=ROWC)) continue;
       int p=oy*COLC+ox;
-      switch (g.map[p]) {
+      switch (map[p]) {
         case TILE_HIDDEN_EGG:
         case TILE_FLAG_EGG:
         case TILE_EGGSPLODE:
@@ -91,16 +172,16 @@ static int sweep_count_eggs(int x,int y) {
  * Safe to call on OOB on not-exposable tiles.
  */
  
-static void sweep_expose_empty_tile(int x,int y) {
+void sweep_expose_empty_tile(uint8_t *map,int x,int y) {
   if ((x<0)||(y<0)||(x>=COLC)||(y>=ROWC)) return;
   int p=y*COLC+x;
-  if (g.map[p]!=TILE_HIDDEN_EMPTY) return;
-  int eggc=sweep_count_eggs(x,y);
-  g.map[p]=TILE_EXPOSE_0+eggc;
+  if (map[p]!=TILE_HIDDEN_EMPTY) return;
+  int eggc=sweep_count_eggs(map,x,y);
+  map[p]=TILE_EXPOSE_0+eggc;
   if (!eggc) {
     int dx=-1; for (;dx<=1;dx++) {
       int dy=-1; for (;dy<=1;dy++) {
-        if (dx||dy) sweep_expose_empty_tile(x+dx,y+dy);
+        if (dx||dy) sweep_expose_empty_tile(map,x+dx,y+dy);
       }
     }
   }
@@ -136,8 +217,19 @@ void sweep_move(int dx,int dy) {
  
 void sweep_expose() {
   switch (g.map[g.sely*COLC+g.selx]) {
-    case TILE_HIDDEN_EMPTY: egg_play_sound(RID_sound_expose); sweep_expose_empty_tile(g.selx,g.sely); break;
-    case TILE_HIDDEN_EGG: egg_play_sound(RID_sound_eggsplode); sweep_lose(); break;
+    case TILE_HIDDEN_EMPTY: egg_play_sound(RID_sound_expose); sweep_expose_empty_tile(g.map,g.selx,g.sely); break;
+    case TILE_HIDDEN_EGG: {
+        int solution=autosolve(g.map);
+        if (solution==COLC*ROWC) {
+          if (autosolve_repair(g.selx,g.sely)>=0) {
+            egg_play_sound(RID_sound_expose);
+            sweep_expose_empty_tile(g.map,g.selx,g.sely);
+            return;
+          }
+        }
+        egg_play_sound(RID_sound_eggsplode);
+        sweep_lose();
+      } break;
     default: egg_play_sound(RID_sound_reject);
   }
 }
