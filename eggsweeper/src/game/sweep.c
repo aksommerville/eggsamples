@@ -106,6 +106,7 @@ void sweep_reset() {
   g.suspend=0;
   g.victory=0;
   g.autoplay_clock=0.0;
+  egg_play_song(RID_song_around_here_somewhere,0,1);
 }
 
 /* Lose game: Reveal all of the false flags and missed eggs, and set g.running false.
@@ -122,6 +123,7 @@ void sweep_lose() {
       case TILE_FLAG_EMPTY: *v=TILE_FALSE_FLAG; break;
     }
   }
+  egg_play_song(RID_song_eternal_torment,0,1);
 }
 
 /* Review map, after a flag change.
@@ -141,6 +143,7 @@ static void sweep_check_victory() {
   egg_play_sound(RID_sound_win);
   g.running=0;
   g.victory=1;
+  egg_play_song(RID_song_eternal_torment,0,1);//TODO victory music
 }
 
 /* How many eggs adjacent to this cell? 0..8, no errors
