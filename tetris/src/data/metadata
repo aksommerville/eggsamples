@@ -1,0 +1,15 @@
+fb=640x360
+title=Tetris
+title$=2
+author=AK Sommerville
+time=2025-01-03
+version=0.0.1
+lang=en
+players=1..8
+desc=Tetris for up to 8 players.
+freedom=free
+copyright=(c) 2025 AK Sommerville
+genre=Puzzle
+tags=Multiplayer
+iconImage=2
+contact=aksommerville@gmail.com

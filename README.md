@@ -25,6 +25,12 @@ So this demonstrates a bare-minimum C game.
 ### eggsweeper
 
 Minesweeper clone.
+Nothing special technically.
+
+### tetris
+
+Massively Local Multiplayer Tetris.
+1..8 players can play in one field, or two fields competitively.
 
 ## TODO
 
@@ -39,7 +45,7 @@ Minesweeper clone.
 - Clone some familiar games, ones that aren't too involved:
 - - [x] Snake
 - - [ ] Tetris
-- - [ ] Minesweeper
+- - [x] Minesweeper
 - - [ ] Sudoku
 - - [ ] Picross
 - - [ ] Space Invaders
