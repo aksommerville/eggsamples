@@ -87,18 +87,21 @@ void sweep_reset() {
     // gAAEAIAEoAAEgJAACVQgRJAEQAAkoAABDCBAAAAAIACAgIQgoQ : Needs to guess immediately.
     // IIAQAACgAQgAFxIzAEoAAAEABQYAAAAAEiCAAAAAEAgGAAGTiA : Solvable but autosolve fails ...fixed
     // AGABFBAggA4IwAABBERAAARCFgAAAAAEAoCAAEAQKAQoEBAAIQ : Autosolve places an incorrect flag at 6,0 ...fixed
-    // CACIEIGAkIAAAJEAigAEAASUAgIgIAgAABAUAAEEBQKICCBAQA ; UNSOLVABLE? Autosolve incorrectly determines the upper-right to be unsolvable. It's solvable in light of the flag count.
+    // CACIEIGAkIAAAJEAigAEAASUAgIgIAgAABAUAAEEBQKICCBAQA : UNSOLVABLE? Autosolve incorrectly determines the upper-right to be unsolvable. It's solvable in light of the flag count.
     //                                                      The lower region is a classic unsolvable foursquare.
     //                                                      !!! If I solve the upper part first, then guess wrong, we think the bottom is solvable (and we would have played wrong on it).
     //                                                      ...fixed
     //                                                      Still not solving every case but I think it's close enough. Undersolving works to the players' benefit.
     //                                                      Now we need autosolve_repair() to work for these weird cases, still a fair test case for it. ...fixed
-    sweep_explicit_map("gAAEAIAEoAAEgJAACVQgRJAEQAAkoAABDCBAAAAAIACAgIQgoQ");
+    // gAAAIAggAAh4AAQQEgHBBIAAEBAgAkAoIQAAAkgAAQAoBQAANB : Finished with one egg still listed pending. And automation fails. Replayed and it was fine. Huh?
+    sweep_explicit_map("gAAAIAggAAh4AAQQEgHBBIAAEBAgAkAoIQAAAkgAAQAoBQAANB");
   } else {
     memset(g.map,TILE_HIDDEN_EMPTY,COLC*ROWC);
     int i=EGGC; while (i-->0) sweep_add_random_egg();
     sweep_log_map();
   }
+  //int eggc=0,i=COLC*ROWC; while (i-->0) if (g.map[i]==TILE_HIDDEN_EGG) eggc++;
+  //fprintf(stderr,"I count %d eggs.\n",eggc);
   g.selx=COLC>>1;
   g.sely=ROWC>>1;
   g.flagc=0;
@@ -143,7 +146,7 @@ static void sweep_check_victory() {
   egg_play_sound(RID_sound_win);
   g.running=0;
   g.victory=1;
-  egg_play_song(RID_song_eternal_torment,0,1);//TODO victory music
+  egg_play_song(RID_song_hold_your_fire,0,1);
 }
 
 /* How many eggs adjacent to this cell? 0..8, no errors
