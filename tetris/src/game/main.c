@@ -28,23 +28,40 @@ int egg_client_init() {
   srand_auto();
   
   g.fieldc=2;
-  int seed=(int)(egg_time_real()*500.0);
-  if (bag_reset(g.fieldc,seed))<0) return -1;
+  int seed=(int)(fmod(egg_time_real()*500.0,2000000000.0));
+  fprintf(stderr,"egg_time_real: %f, seed=0x%08x\n",egg_time_real(),seed);
+  if (bag_reset(g.fieldc,seed)<0) return -1;
+  if (field_init(&g.l,0,1)<0) return -1;
+  g.l.playerv[0].playerid=1;
+  if (g.fieldc==2) {
+    if (field_init(&g.r,1,1)<0) return -1;
+    g.r.playerv[0].playerid=2;
+  }
+  g.running=1;
+  
+  egg_play_song(4,0,1);
   
   return 0;
 }
 
-static int pvinput=0;//XXX
+static double XXX_pvplayhead=0.0;
 
 void egg_client_update(double elapsed) {
-  int input=egg_input_get_one(0);//XXX we're very multiplayer, try not to use the aggregate
-  if (input!=pvinput) {
-    if ((input&EGG_BTN_NORTH)&&!(pvinput&EGG_BTN_NORTH)) {
-      if (g.fieldc==1) g.fieldc=2;
-      else g.fieldc=1;
+  if (g.running) {
+    field_update(&g.l,elapsed);
+    if (g.fieldc==2) {
+      field_update(&g.r,elapsed);
     }
-    pvinput=input;
   }
+  
+  //XXX TEMP Track songs -- tell me when it repeats and how long it was.
+  double playhead=egg_audio_get_playhead();
+  if (playhead<XXX_pvplayhead) {
+    int sec=(int)XXX_pvplayhead;
+    int min=sec/60; sec%=60;
+    fprintf(stderr,"Song repeats, runtime roughly %d:%d\n",min,sec);
+  }
+  XXX_pvplayhead=playhead;
 }
 
 void egg_client_render() {

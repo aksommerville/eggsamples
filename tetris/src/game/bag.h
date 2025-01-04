@@ -37,4 +37,14 @@ int bag_draw(int which);
  */
 int bag_peek(int which);
 
+/* Fill (dstv) with the positions of four tiles describing tetromino (tetr) with the given (xform).
+ * We only look at the low 2 bits of (xform), and interpret them as quarter-turns clockwise.
+ * The origin of the returned space is the point around which they rotate.
+ * (dsta) should always be 4, and the return value is either 4, or 0 if (tetr) invalid.
+ */
+struct tetr_tile {
+  int x,y; // 0..3
+};
+int tetr_tile_shape(struct tetr_tile *dstv,int dsta,int tetr,int xform);
+
 #endif

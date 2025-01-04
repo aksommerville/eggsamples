@@ -1,8 +1,5 @@
 #include "tetris.h"
 
-static int textid=0;//XXX
-static int textw=0,texth=0;
-
 /* Private renderer state.
  */
  
@@ -67,21 +64,6 @@ static void draw_box(const struct rect *r) {
   draw_box_loose(r->x,r->y,r->w,r->h);
 }
 
-//XXX testing
-static void draw_field(int16_t dstx,int16_t dsty) {
-  int16_t dstx0=dstx+(NS_sys_tilesize>>1);
-  dsty+=NS_sys_tilesize>>1;
-  uint8_t tileid=0;
-  int row=0; for (;row<FIELDH;row++,dsty+=NS_sys_tilesize) {
-    int col=0; for (dstx=dstx0;col<FIELDW;col++,dstx+=NS_sys_tilesize) {
-      if ((row>4)||((row==4)&&(col&1))) {
-        graf_draw_tile(&g.graf,g.texid_tiles,dstx,dsty,tileid,0);
-      }
-      if (++tileid>=7) tileid=0;
-    }
-  }
-}
-
 /* Recalculate layout.
  */
  
@@ -142,52 +124,28 @@ void render() {
     render_layout();
   }
   
-  if (!textid) {//XXX
-    textid=font_tex_multiline(g.font,"Score: 0123456789\nHigh: 9876543210",-1,11*NS_sys_tilesize,4*NS_sys_tilesize,0xffffffff);
-    egg_texture_get_status(&textw,&texth,textid);
-  }
-  
-  /* Common elements.
+  /* Common elements and left side boxes always.
+   * Right side boxes if enabled.
    */
   draw_box(&r.score);
-  
-  /* Left-side elements always.
-   */
   draw_box(&r.fieldl);
-  draw_field(r.fieldl.x,r.fieldl.y);//TODO
-  { // TODO
-    int16_t dstx=r.score.x+(r.score.w>>1)-(textw>>1);
-    int16_t dsty=r.score.y+(r.score.h>>1)-(texth>>1);
-    graf_draw_decal(&g.graf,textid,dstx,dsty,0,0,textw,texth,0);
-  }
   draw_box(&r.nextl);
-  graf_draw_tile_buffer(&g.graf,g.texid_tiles,r.nextl.x+NS_sys_tilesize,r.nextl.y+NS_sys_tilesize,
-    (const uint8_t*)//TODO
-    "\xff\xff\xff\xff"
-    "\xff\x01\xff\xff"
-    "\xff\x01\xff\xff"
-    "\xff\x01\x01\xff",
-    4,4,4
-  );
-  
-  /* Right-side elements if requested.
-   */
   if (r.fieldc==2) {
     draw_box(&r.fieldr);
-    draw_field(r.fieldr.x,r.fieldr.y);//TODO
-    { // TODO
-      int16_t dstx=r.score.x+(r.score.w>>1)-(textw>>1);
-      int16_t dsty=r.score.y+(r.score.h>>1)-(texth>>1);
-      graf_draw_decal(&g.graf,textid,dstx,dsty,0,0,textw,texth,0);
-    }
     draw_box(&r.nextr);
-    graf_draw_tile_buffer(&g.graf,g.texid_tiles,r.nextr.x+NS_sys_tilesize,r.nextr.y+NS_sys_tilesize,
-      (const uint8_t*)//TODO
-      "\xff\xff\xff\xff"
-      "\xff\x03\x03\xff"
-      "\xff\x03\x03\xff"
-      "\xff\xff\xff\xff",
-      4,4,4
-    );
+  }
+  
+  /* If running, draw the games.
+   */
+  if (g.running) {
+    field_render(&g.l,r.fieldl.x,r.fieldl.y);
+    field_render_next(&g.l,r.nextl.x,r.nextl.y,r.nextl.w,r.nextl.h);
+    if (g.fieldc==2) {
+      field_render_combined_score(&g.l,&g.r,r.score.x,r.score.y,r.score.w,r.score.h);
+      field_render(&g.r,r.fieldr.x,r.fieldr.y);
+      field_render_next(&g.r,r.nextr.x,r.nextr.y,r.nextr.w,r.nextr.h);
+    } else {
+      field_render_single_score(&g.l,r.score.x,r.score.y,r.score.w,r.score.h);
+    }
   }
 }
