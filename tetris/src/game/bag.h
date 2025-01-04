@@ -2,9 +2,7 @@
  * Bag is the source of tetrominoes.
  * The one bag has two readheads, so in a two-field game, each field gets exactly the same draw.
  * Players within a field draw from the same source -- bag itself has no concept of players.
- * We use a 14-bag strategy: In each set of 14 draws, each tetromino will appear exactly twice.
  * Bag uses its own globals, independent of the app's globals.
- * Also, we're 100% finite-state and self-contained. No stdlib, nothing. About 150 bytes of globals (which you could reduce to more like 40, by using 8-bit ints where possible).
  */
  
 #ifndef BAG_H

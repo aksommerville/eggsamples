@@ -27,7 +27,7 @@ int egg_client_init() {
   
   srand_auto();
   
-  g.fieldc=2;
+  g.fieldc=1;
   int seed=(int)(fmod(egg_time_real()*500.0,2000000000.0));
   fprintf(stderr,"egg_time_real: %f, seed=0x%08x\n",egg_time_real(),seed);
   if (bag_reset(g.fieldc,seed)<0) return -1;
@@ -39,12 +39,12 @@ int egg_client_init() {
   }
   g.running=1;
   
-  egg_play_song(6,0,1);
+  //TODO Let the user pick a song. And I guess make a few more. And None should be an option too.
+  egg_play_song(RID_song_in_thru_the_window,0,1);
+  //egg_play_song(RID_song_bakers_dozen,0,1);
   
   return 0;
 }
-
-static double XXX_pvplayhead=0.0;
 
 void egg_client_update(double elapsed) {
   if (g.running) {
@@ -53,15 +53,6 @@ void egg_client_update(double elapsed) {
       field_update(&g.r,elapsed);
     }
   }
-  
-  //XXX TEMP Track songs -- tell me when it repeats and how long it was.
-  double playhead=egg_audio_get_playhead();
-  if (playhead<XXX_pvplayhead) {
-    int sec=(int)XXX_pvplayhead;
-    int min=sec/60; sec%=60;
-    fprintf(stderr,"Song repeats, runtime roughly %d:%d\n",min,sec);
-  }
-  XXX_pvplayhead=playhead;
 }
 
 void egg_client_render() {

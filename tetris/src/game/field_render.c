@@ -79,7 +79,19 @@ void field_render_next(struct field *field,int16_t dstx,int16_t dsty,int16_t dst
  */
  
 void field_render_single_score(struct field *field,int16_t dstx,int16_t dsty,int16_t dstw,int16_t dsth) {
-  //TODO
+
+  /* Rebuild the score texture if needed.
+   */
+  if (field->disp_score!=field->score) {
+    egg_texture_del(field->score_texid);
+    char tmp[64];
+    int tmpc=snprintf(tmp,sizeof(tmp),"%d (%d)",field->score,field->linec[0]+field->linec[1]*2+field->linec[2]*3+field->linec[3]*4);
+    if ((tmpc<0)||(tmpc>sizeof(tmp))) tmpc=0;
+    field->score_texid=font_tex_oneline(g.font,tmp,tmpc,dstw,0xffffffff);
+    egg_texture_get_status(&field->score_w,&field->score_h,field->score_texid);
+  }
+  
+  graf_draw_decal(&g.graf,field->score_texid,dstx,dsty+(dsth>>1)-(field->score_h>>1),0,0,field->score_w,field->score_h,0);
 }
 
 /* Render score for double-field game.

@@ -12,6 +12,8 @@
 #define HORZ_REPEAT_TIME 0.125
 #define FAST_FALL_TIME 0.040
 
+#define SCORE_LIMIT 999999
+
 #include "egg/egg.h"
 #include "egg_rom_toc.h"
 #include "shared_symbols.h"

@@ -6,6 +6,9 @@
 int field_init(struct field *field,int readhead,int playerc) {
   if ((playerc<1)||(playerc>PLAYER_LIMIT)) return -1;
   if ((readhead<0)||(readhead>1)) return -1;
+  
+  egg_texture_del(field->score_texid);
+
   memset(field,0,sizeof(struct field));
   field->readhead=readhead;
   field->playerc=playerc;
@@ -19,9 +22,13 @@ int field_init(struct field *field,int readhead,int playerc) {
     player->x=0;
     player->y=0;
   }
-  memset(field->cellv,0,sizeof(field->cellv));
   field->droptime=0.500;//TODO Store these somewhere, per level. And make such a thing as "level".
+  field->linevalue[0]=40;//'' currently matching Level 0 of NES Tetris.
+  field->linevalue[1]=100;//''
+  field->linevalue[2]=300;//''
+  field->linevalue[3]=1200;//''
   field->dirty=0;
+  field->disp_score=-1;
   return 0;
 }
 
@@ -126,10 +133,10 @@ static void player_rotate(struct field *field,struct player *player,int d) {
   
     // If a small adjustment to (x) can make it valid, go with it. We prefer not to reject rotation.
     int x0=player->x;
-    int d=1; for (;d<=2;d++) {
-      player->x=x0-d;
+    int dx=1; for (;dx<=2;dx++) {
+      player->x=x0-dx;
       if (!player_collision(field,player)) return;
-      player->x=x0+d;
+      player->x=x0+dx;
       if (!player_collision(field,player)) return;
     }
     player->x=x0;
@@ -198,7 +205,14 @@ static void field_check_cells(struct field *field) {
     }
   }
   if (lines_scored) {
-    fprintf(stderr,"Scored %d lines.\n",lines_scored);//TODO scoring
+    // In theory, there can be more than 4 at once. In practice, I don't think it can be done reliably (depends on the order of players in our list).
+    while (lines_scored>4) {
+      lines_scored-=4;
+      field->linec[3]++;
+      if ((field->score+=field->linevalue[3])>SCORE_LIMIT) field->score=SCORE_LIMIT;
+    }
+    field->linec[lines_scored-1]++;
+    if ((field->score+=field->linevalue[lines_scored-1])>SCORE_LIMIT) field->score=SCORE_LIMIT;
   }
 }
 

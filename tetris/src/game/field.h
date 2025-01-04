@@ -24,6 +24,11 @@ struct field {
   uint8_t cellv[FIELDW*FIELDH]; // Cemented tiles only.
   double droptime;
   int dirty;
+  int linevalue[4]; // How much is each play worth? Varies by level.
+  int linec[4]; // [singles,doubles,triples,tetri]
+  int score;
+  int disp_score;
+  int score_texid,score_w,score_h;
 };
 
 int field_init(struct field *field,int readhead,int playerc);
