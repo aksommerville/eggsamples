@@ -39,7 +39,7 @@ int egg_client_init() {
   }
   g.running=1;
   
-  egg_play_song(5,0,1);
+  egg_play_song(6,0,1);
   
   return 0;
 }
