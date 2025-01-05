@@ -9,10 +9,14 @@ static void field_next_level(struct field *field,int level) {
   /* NES Tetris I'm told goes up to like 30?
    * But I've only been able to test the first 20, so that's all we imitate.
    */
+  if (level<0) level=0;
+  else if (level>19) level=19;
+  if (level!=field->level) {
+    // We're not responsible for rendering it, but we are responsible for this clock.
+    // Proceed with initialization even if (level==field->level); eg it might be zero at init.
+    field->disp_level_clock=DISP_LEVEL_TIME;
+  }
   field->level=level;
-  if (field->level<0) field->level=0;
-  else if (field->level>19) field->level=19;
-  fprintf(stderr,"%s begin level %d\n",__func__,field->level);
   
   /* Scoring increases linearly with level.
    */
@@ -60,6 +64,7 @@ int field_init(struct field *field,int readhead,int playerc,int level) {
   if ((level<0)||(level>19)) return -1;
   
   egg_texture_del(field->score_texid);
+  egg_texture_del(field->level_texid);
 
   memset(field,0,sizeof(struct field));
   field->readhead=readhead;
@@ -75,6 +80,7 @@ int field_init(struct field *field,int readhead,int playerc,int level) {
     player->y=0;
   }
   field_next_level(field,level);
+  field->disp_level_clock=0.0; // Don't declare the level when starting out.
   field->dropscore=1; // *rowc
   field->dirty=0;
   field->disp_score=-1;
@@ -220,8 +226,9 @@ static void player_move(struct field *field,struct player *player,int d) {
     player->motionclock=0.0-MOTION_INITIAL_DELAY;
   }
   player->x+=d;
+  // After a collision, try again immediately next frame. This is necessary for sliding into gaps at high speed.
   if (player_collision(field,player)) {
-    //egg_play_sound(RID_sound_reject);
+    player->motionclock=MOTION_TIME-0.001;
     player->x-=d;
   } else {
     egg_play_sound(RID_sound_motion);
@@ -484,6 +491,10 @@ static void field_update_players(struct field *field,double elapsed) {
 
 void field_update(struct field *field,double elapsed) {
   if (field->finished) return;
+  
+  if (field->disp_level_clock>0.0) {
+    field->disp_level_clock-=elapsed;
+  }
   
   // Pause hard during line removal.
   if (field->rmclock<=0.0) {

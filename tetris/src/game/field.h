@@ -23,6 +23,8 @@
 #define MOTION_TIME (6.0*0.016666)
 #define MOTION_INITIAL_DELAY (4.0*0.016666)
 
+#define DISP_LEVEL_TIME 2.000
+
 struct field {
   int readhead; // For talking to the bag.
   struct player {
@@ -47,6 +49,9 @@ struct field {
   int score;
   int disp_score;
   int score_texid,score_w,score_h;
+  int disp_level;
+  int level_texid,level_w,level_h;
+  double disp_level_clock;
   int finished;
   uint8_t rmrowv[FIELDH]; // When (rmclock>0), nonzero members here are being removed. Not necessarily contiguous.
   double rmclock; // Counts down while a removal animation in progress.

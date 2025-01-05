@@ -61,6 +61,33 @@ static void field_render_player(struct field *field,const struct player *player,
   }
 }
 
+/* Render the level indicator.
+ */
+ 
+static void field_render_level(struct field *field,int16_t parentx,int16_t parenty) {
+  int16_t parentw=NS_sys_tilesize*FIELDW;
+  int16_t parenth=NS_sys_tilesize*FIELDH;
+
+  // Regenerate texture if needed.
+  if (field->disp_level!=field->level) {
+    egg_texture_del(field->level_texid);
+    char tmp[64];
+    int tmpc=snprintf(tmp,sizeof(tmp),"Level %d",field->level);
+    if ((tmpc>0)&&(tmpc<sizeof(tmp))) field->level_texid=font_tex_oneline(g.font,tmp,tmpc,parentw,0xffffffff);
+    egg_texture_get_status(&field->level_w,&field->level_h,field->level_texid);
+  }
+  
+  int frame=((int)(field->disp_level_clock*8.0))&1;
+  if (frame) graf_set_alpha(&g.graf,0xc0);
+  else graf_set_alpha(&g.graf,0x40);
+  
+  int16_t dstx=parentx+(parentw>>1)-(field->level_w>>1);
+  int16_t dsty=parenty+(parenth>>1)-(field->level_h>>1);
+  graf_draw_decal(&g.graf,field->level_texid,dstx,dsty,0,0,field->level_w,field->level_h,0);
+  
+  graf_set_alpha(&g.graf,0xff);
+}
+
 /* Render main portion.
  */
  
@@ -74,6 +101,7 @@ void field_render(struct field *field,int16_t dstx,int16_t dsty) {
   const struct player *player=field->playerv;
   int i=field->playerc;
   for (;i-->0;player++) field_render_player(field,player,dstx,dsty);
+  if (field->disp_level_clock>0.0) field_render_level(field,dstx-(NS_sys_tilesize>>1),dsty-(NS_sys_tilesize>>1));
 }
 
 /* Render upcoming tetromino.
