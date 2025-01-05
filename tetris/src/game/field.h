@@ -29,6 +29,7 @@ struct field {
   int score;
   int disp_score;
   int score_texid,score_w,score_h;
+  int finished;
 };
 
 int field_init(struct field *field,int readhead,int playerc);

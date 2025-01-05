@@ -31,9 +31,9 @@ int egg_client_init() {
   int seed=(int)(fmod(egg_time_real()*500.0,2000000000.0));
   fprintf(stderr,"egg_time_real: %f, seed=0x%08x\n",egg_time_real(),seed);
   if (bag_reset(g.fieldc,seed)<0) return -1;
-  if (field_init(&g.l,0,2)<0) return -1;
+  if (field_init(&g.l,0,1)<0) return -1;
   g.l.playerv[0].playerid=1;
-  g.l.playerv[1].playerid=2;
+  //g.l.playerv[1].playerid=2;
   if (g.fieldc==2) {
     if (field_init(&g.r,1,1)<0) return -1;
     g.r.playerv[0].playerid=2;

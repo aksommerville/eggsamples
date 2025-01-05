@@ -117,6 +117,7 @@ static int player_fall(struct field *field,struct player *player) {
     case COLLIDE_FLOOR: {
         player->y--;
         player_commit_piece(field,player);
+        egg_play_sound(RID_sound_dropped);
       } break;
     case COLLIDE_WALL: // Wall shouldn't be possible on a vertical move.
     case COLLIDE_OTHER: {
@@ -131,21 +132,26 @@ static int player_fall(struct field *field,struct player *player) {
  */
  
 static void player_rotate(struct field *field,struct player *player,int d) {
+  #define HOW_BOUT_NOW { if (!player_collision(field,player)) { \
+    egg_play_sound(RID_sound_rotate); \
+    return; \
+  }}
   player->xform+=d;
-  if (player_collision(field,player)) {
+  HOW_BOUT_NOW
   
-    // If a small adjustment to (x) can make it valid, go with it. We prefer not to reject rotation.
-    int x0=player->x;
-    int dx=1; for (;dx<=2;dx++) {
-      player->x=x0-dx;
-      if (!player_collision(field,player)) return;
-      player->x=x0+dx;
-      if (!player_collision(field,player)) return;
-    }
-    player->x=x0;
-    
-    player->xform-=d;
+  // If a small adjustment to (x) can make it valid, go with it. We prefer not to reject rotation.
+  int x0=player->x;
+  int dx=1; for (;dx<=2;dx++) {
+    player->x=x0-dx;
+    HOW_BOUT_NOW
+    player->x=x0+dx;
+    HOW_BOUT_NOW
   }
+
+  player->x=x0;
+  player->xform-=d;
+  egg_play_sound(RID_sound_reject);
+  #undef HOW_BOUT_NOW
 }
 
 /* Move one cell horizontally, and schedule repeat.
@@ -161,7 +167,10 @@ static void player_move(struct field *field,struct player *player,int d) {
   }
   player->x+=d;
   if (player_collision(field,player)) {
+    //egg_play_sound(RID_sound_reject);
     player->x-=d;
+  } else {
+    egg_play_sound(RID_sound_motion);
   }
 }
 
@@ -208,6 +217,10 @@ static void field_check_cells(struct field *field) {
     }
   }
   if (lines_scored) {
+    switch (lines_scored) {
+      case 1: case 2: case 3: egg_play_sound(RID_sound_lines); break;
+      default: egg_play_sound(RID_sound_tetris); break;
+    }
     // In theory, there can be more than 4 at once. In practice, I don't think it can be done reliably (depends on the order of players in our list).
     while (lines_scored>4) {
       lines_scored-=4;
@@ -310,7 +323,20 @@ static int player_draw(struct field *field,struct player *player) {
   int tetr=bag_peek(field->readhead);
   int xform=0,x=0,y=0;
   if (choose_new_tetromino_position(&x,&y,&xform,tetr,field)<0) {
-    //TODO Is the field full up to this point? If not, return zero to revisit this player later.
+  
+    // If there's a tile in every row of the field, game over, return <0.
+    // But if some row is empty, return 0 to keep running and revisit this player later.
+    int game_over=1;
+    const uint8_t *p=field->cellv;
+    int y=FIELDH;
+    while (y-->0) {
+      int x=FIELDW,empty=1;
+      while (x-->0) {
+        p--;
+        if (*p) empty=0;
+      }
+      if (empty) return 0;
+    }
     return -1;
   }
   if (bag_draw(field->readhead)!=tetr) return -1;
@@ -326,6 +352,7 @@ static int player_draw(struct field *field,struct player *player) {
  */
 
 void field_update(struct field *field,double elapsed) {
+  if (field->finished) return;
   struct player *player=field->playerv;
   int i=field->playerc;
   for (;i-->0;player++) {
@@ -333,7 +360,11 @@ void field_update(struct field *field,double elapsed) {
     // Draw tile if we're out.
     if (player->tetr<0) {
       int err=player_draw(field,player);
-      if (err<0) break;
+      if (err<0) {
+        egg_play_sound(RID_sound_fatal);
+        field->finished=1;
+        return;
+      }
       if (!err) continue;
     }
   
