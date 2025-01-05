@@ -13,8 +13,9 @@ Requires [Egg](https://github.com/aksommerville/egg) to build.
 - - [x] Per-player colors in a multiplayer field, instead of per-shape.
 - - [x] Scorekeeping.
 - - [ ] Horz auto-motion, I think we need a separate initial interval.
-- - [ ] Fanfare and a brief delay on scoring lines.
-- - [ ] Will a line-score delay be disruptive to other players in the same field? Would it be less weird to let them keep playing during the animation?
+- - [x] Fanfare and a brief delay on scoring lines.
+- - [x] Will a line-score delay be disruptive to other players in the same field? Would it be less weird to let them keep playing during the animation?
+- - - Play proceeds during the 375-ms removal animation. No implementation I've seen before does this, but I think it's appropriate owing to multiplayer.
 - - [x] Should we do the drop bonus like NES Tetris? It doesn't add much, and it's a little complicated. ...no it's not, and yes.
 - - [ ] Levels. Speed up and increase scores.
 - [ ] Menus.

@@ -8,6 +8,11 @@
 #ifndef FIELD_H
 #define FIELD_H
 
+/* During the removal animation, the rendered field does not match the model, and some operations are suspended.
+ * So don't let it last too long.
+ */
+#define RMANIMTIME 0.375
+
 struct field {
   int readhead; // For talking to the bag.
   struct player {
@@ -32,6 +37,8 @@ struct field {
   int disp_score;
   int score_texid,score_w,score_h;
   int finished;
+  uint8_t rmrowv[FIELDH]; // When (rmclock>0), nonzero members here are being removed. Not necessarily contiguous.
+  double rmclock; // Counts down while a removal animation in progress.
 };
 
 int field_init(struct field *field,int readhead,int playerc);

@@ -203,20 +203,23 @@ static void player_end_fast_fall(struct field *field,struct player *player) {
   player->dropc=0;
 }
 
-/* Check for termination and completed lines, anything triggered by a change to the cells.
+/* Check for completed lines.
  */
  
 static void field_check_cells(struct field *field) {
+  memset(field->rmrowv,0,sizeof(field->rmrowv));
   int lines_scored=0;
   uint8_t *p=field->cellv+sizeof(field->cellv);
-  int row=FIELDH;
+  int row=FIELDH,oldrow=FIELDH;
   while (row-->0) {
+    oldrow--;
     int line_complete=1;
     int col=FIELDW; while (col-->0) {
       p--;
       if (!*p) line_complete=0;
     }
     if (line_complete) {
+      field->rmrowv[oldrow]=1;
       memmove(field->cellv+FIELDW,field->cellv,row*FIELDW);
       memset(field->cellv,0,FIELDW);
       lines_scored++;
@@ -225,6 +228,7 @@ static void field_check_cells(struct field *field) {
     }
   }
   if (lines_scored) {
+    field->rmclock=RMANIMTIME;
     switch (lines_scored) {
       case 1: case 2: case 3: egg_play_sound(RID_sound_lines); break;
       default: egg_play_sound(RID_sound_tetris); break;
@@ -337,18 +341,16 @@ static int player_draw(struct field *field,struct player *player) {
     int game_over=1;
     const uint8_t *p=field->cellv+FIELDW*FIELDH;
     int y=FIELDH;
-    while (y-->0) {
+    while (y-->1) { // sic 1 not 0: All tetrominoes can be placed in two rows. Most can't in one. So allow the top row to be empty, otherwise we might stall.
       int x=FIELDW,empty=1;
       while (x-->0) {
         p--;
         if (*p) empty=0;
       }
       if (empty) {
-        fprintf(stderr,"row %d is empty, not terminating yet\n",y);
         return 0;
       }
     }
-    fprintf(stderr,"all rows full and the new tetromino couldn't place. terminating.\n");
     return -1;
   }
   if (bag_draw(field->readhead)!=tetr) return -1;
@@ -418,8 +420,13 @@ void field_update(struct field *field,double elapsed) {
     }
   }
   
-  // If the field is dirty, check for lines.
-  if (field->dirty) {
+  // Tick the removal animation clock.
+  if (field->rmclock>0.0) {
+    field->rmclock-=elapsed;
+  }
+  
+  // If the field is dirty, check for lines. Defer this when the removal animation is running.
+  if (field->dirty&&(field->rmclock<=0.0)) {
     field->dirty=0;
     field_check_cells(field);
   }

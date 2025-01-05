@@ -27,16 +27,29 @@ int egg_client_init() {
   
   srand_auto();
   
-  g.fieldc=2;
+  g.fieldc=1;
   int seed=(int)(fmod(egg_time_real()*500.0,2000000000.0));
   fprintf(stderr,"egg_time_real: %f, seed=0x%08x\n",egg_time_real(),seed);
   if (bag_reset(g.fieldc,seed)<0) return -1;
   if (field_init(&g.l,0,1)<0) return -1;
   g.l.playerv[0].playerid=1;
-  g.l.playerv[1].playerid=2;
+  g.l.playerv[1].playerid=3;
+  g.l.playerv[2].playerid=5;
+  g.l.playerv[3].playerid=7;
+  g.l.playerv[4].playerid=2;
+  g.l.playerv[5].playerid=4;
+  g.l.playerv[6].playerid=6;
+  g.l.playerv[7].playerid=8;
   if (g.fieldc==2) {
-    if (field_init(&g.r,1,1)<0) return -1;
+    if (field_init(&g.r,1,4)<0) return -1;
     g.r.playerv[0].playerid=2;
+    g.r.playerv[1].playerid=4;
+    g.r.playerv[2].playerid=6;
+    g.r.playerv[3].playerid=8;
+    g.r.playerv[4].playerid=1;
+    g.r.playerv[5].playerid=3;
+    g.r.playerv[6].playerid=5;
+    g.r.playerv[7].playerid=7;
   }
   g.running=1;
   

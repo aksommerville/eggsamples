@@ -4,13 +4,42 @@
  * Caller adjusts (dstx,dsty) to the center of the top-left cell.
  */
  
+static void field_render_cellv_rm(struct field *field,int16_t dstx,int16_t dsty) {
+  /* It's substantially more complex when the removal animation is running.
+   * Start from the bottom.
+   * When we encounter a removing row, draw the special thing and advance output but not input position -- model is already updated.
+   */
+  uint32_t hilite=(((int)(field->rmclock*15.0))&1)?0xff0000ff:0x200000ff;
+  dsty+=NS_sys_tilesize*(FIELDH-1);
+  const uint8_t *rowv=field->cellv+FIELDW*(FIELDH-1);
+  const uint8_t *rmv=field->rmrowv+(FIELDH-1);
+  int yi=FIELDH; for (;yi-->0;rmv--,dsty-=NS_sys_tilesize) {
+    if (*rmv) {
+      graf_draw_rect(&g.graf,dstx-(NS_sys_tilesize>>1),dsty-(NS_sys_tilesize>>1),FIELDW*NS_sys_tilesize,NS_sys_tilesize,hilite);
+    } else {
+      int xi=FIELDW;
+      const uint8_t *p=rowv;
+      int16_t dstx1=dstx;
+      for (;xi-->0;dstx1+=NS_sys_tilesize,p++) {
+        if (!*p) continue;
+        graf_draw_tile(&g.graf,g.texid_tiles,dstx1,dsty,*p,0);
+      }
+      rowv-=FIELDW;
+    }
+  }
+}
+ 
 static void field_render_cellv(struct field *field,int16_t dstx,int16_t dsty) {
-  int16_t dstx0=dstx;
-  const uint8_t *v=field->cellv;
-  int yi=FIELDH; for (;yi-->0;dsty+=NS_sys_tilesize) {
-    int xi=FIELDW; for (dstx=dstx0;xi-->0;dstx+=NS_sys_tilesize,v++) {
-      if (!*v) continue; // Zero means empty, transparent.
-      graf_draw_tile(&g.graf,g.texid_tiles,dstx,dsty,*v,0);
+  if (field->rmclock>0.0) {
+    field_render_cellv_rm(field,dstx,dsty);
+  } else {
+    int16_t dstx0=dstx;
+    const uint8_t *v=field->cellv;
+    int yi=FIELDH; for (;yi-->0;dsty+=NS_sys_tilesize) {
+      int xi=FIELDW; for (dstx=dstx0;xi-->0;dstx+=NS_sys_tilesize,v++) {
+        if (!*v) continue; // Zero means empty, transparent.
+        graf_draw_tile(&g.graf,g.texid_tiles,dstx,dsty,*v,0);
+      }
     }
   }
 }
