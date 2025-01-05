@@ -16,6 +16,7 @@ struct field {
     int motion; // -1,0,1
     double motionclock;
     int down;
+    int dropc;
     int tetr,xform;
     int x,y; // Add the tetriminoes' relative positions. (x,y) is often <0
     double dropclock;
@@ -24,6 +25,7 @@ struct field {
   uint8_t cellv[FIELDW*FIELDH]; // Cemented tiles only.
   double droptime;
   int dirty;
+  int dropscore; // Per level.
   int linevalue[4]; // How much is each play worth? Varies by level.
   int linec[4]; // [singles,doubles,triples,tetri]
   int score;

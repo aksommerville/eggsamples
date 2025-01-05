@@ -27,6 +27,7 @@ int field_init(struct field *field,int readhead,int playerc) {
   field->linevalue[1]=100;//''
   field->linevalue[2]=300;//''
   field->linevalue[3]=1200;//''
+  field->dropscore=1; // *rowc
   field->dirty=0;
   field->disp_score=-1;
   return 0;
@@ -39,13 +40,13 @@ static void player_commit_piece(struct field *field,struct player *player) {
   struct tetr_tile tilev[4];
   int tilec=tetr_tile_shape(tilev,4,player->tetr,player->xform);
   if ((tilec>0)&&(tilec<=4)) {
+    uint8_t tileid=(field->playerc>1)?0x08/*(0x00+player->playerid)*/:(0x01+player->tetr);
     const struct tetr_tile *tile=tilev;
-    int hitwall=0;
     int ti=tilec;
     for (;ti-->0;tile++) {
       int x=player->x+tile->x,y=player->y+tile->y;
       if ((x<0)||(y<0)||(x>=FIELDW)||(y>=FIELDH)) continue;
-      field->cellv[y*FIELDW+x]=0x01+player->tetr;
+      field->cellv[y*FIELDW+x]=tileid;
     }
     field->dirty=1;
   }
@@ -115,16 +116,21 @@ static int player_fall(struct field *field,struct player *player) {
   player->y++;
   switch (player_collision(field,player)) {
     case COLLIDE_FLOOR: {
+        if (player->down&&player->dropc) {
+          if ((field->score+=player->dropc*field->dropscore)>SCORE_LIMIT) field->score=SCORE_LIMIT;
+        }
         player->y--;
         player_commit_piece(field,player);
         egg_play_sound(RID_sound_dropped);
-      } break;
+        player->dropc=0;
+      } return 0;
     case COLLIDE_WALL: // Wall shouldn't be possible on a vertical move.
     case COLLIDE_OTHER: {
         player->y--;
         return 1;
       }
   }
+  player->dropc++;
   return 0;
 }
 
@@ -188,11 +194,13 @@ static void player_stop(struct field *field,struct player *player,int d) {
  
 static void player_begin_fast_fall(struct field *field,struct player *player) {
   player->down=1;
+  player->dropc=0;
   player->dropclock=FAST_FALL_TIME;
 }
 
 static void player_end_fast_fall(struct field *field,struct player *player) {
   player->down=0;
+  player->dropc=0;
 }
 
 /* Check for termination and completed lines, anything triggered by a change to the cells.
@@ -327,7 +335,7 @@ static int player_draw(struct field *field,struct player *player) {
     // If there's a tile in every row of the field, game over, return <0.
     // But if some row is empty, return 0 to keep running and revisit this player later.
     int game_over=1;
-    const uint8_t *p=field->cellv;
+    const uint8_t *p=field->cellv+FIELDW*FIELDH;
     int y=FIELDH;
     while (y-->0) {
       int x=FIELDW,empty=1;
@@ -335,8 +343,12 @@ static int player_draw(struct field *field,struct player *player) {
         p--;
         if (*p) empty=0;
       }
-      if (empty) return 0;
+      if (empty) {
+        fprintf(stderr,"row %d is empty, not terminating yet\n",y);
+        return 0;
+      }
     }
+    fprintf(stderr,"all rows full and the new tetromino couldn't place. terminating.\n");
     return -1;
   }
   if (bag_draw(field->readhead)!=tetr) return -1;

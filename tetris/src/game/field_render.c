@@ -23,11 +23,12 @@ static void field_render_player(struct field *field,const struct player *player,
   struct tetr_tile tilev[4];
   int tilec=tetr_tile_shape(tilev,4,player->tetr,player->xform);
   if (tilec>4) return;
+  uint8_t tileid=(field->playerc>1)?(0x00+player->playerid):(0x01+player->tetr);
   const struct tetr_tile *tile=tilev;
   for (;tilec-->0;tile++) {
     int col=player->x+tile->x; if ((col<0)||(col>=FIELDW)) continue;
     int row=player->y+tile->y; if ((row<0)||(row>=FIELDH)) continue;
-    graf_draw_tile(&g.graf,g.texid_tiles,dstx+col*NS_sys_tilesize,dsty+row*NS_sys_tilesize,0x01+player->tetr,0);
+    graf_draw_tile(&g.graf,g.texid_tiles,dstx+col*NS_sys_tilesize,dsty+row*NS_sys_tilesize,tileid,0);
   }
 }
 
@@ -35,6 +36,9 @@ static void field_render_player(struct field *field,const struct player *player,
  */
  
 void field_render(struct field *field,int16_t dstx,int16_t dsty) {
+  if (field->finished) {
+    graf_draw_rect(&g.graf,dstx,dsty,FIELDW*NS_sys_tilesize,FIELDH*NS_sys_tilesize,0x400010ff);
+  }
   dstx+=NS_sys_tilesize>>1;
   dsty+=NS_sys_tilesize>>1;
   field_render_cellv(field,dstx,dsty);
@@ -63,7 +67,7 @@ void field_render_next(struct field *field,int16_t dstx,int16_t dsty,int16_t dst
     int16_t figh=(yz-ya+1)*NS_sys_tilesize;
     int16_t figx=dstx+(dstw>>1)-(figw>>1)+(NS_sys_tilesize>>1);
     int16_t figy=dsty+(dsth>>1)-(figh>>1)+(NS_sys_tilesize>>1);
-    uint8_t tileid=0x01+tetr; // TODO In a multi-player field, I think we should use a neutral tile.
+    uint8_t tileid=(field->playerc>1)?0x08:(0x01+tetr);
     const struct tetr_tile *tile=tilev;
     for (i=tilec;i-->0;tile++) {
       graf_draw_tile(&g.graf,g.texid_tiles,figx+(tile->x-xa)*NS_sys_tilesize,figy+(tile->y-ya)*NS_sys_tilesize,tileid,0);
@@ -85,10 +89,11 @@ void field_render_single_score(struct field *field,int16_t dstx,int16_t dsty,int
   if (field->disp_score!=field->score) {
     egg_texture_del(field->score_texid);
     char tmp[64];
-    int tmpc=snprintf(tmp,sizeof(tmp),"%d (%d)",field->score,field->linec[0]+field->linec[1]*2+field->linec[2]*3+field->linec[3]*4);
+    int tmpc=snprintf(tmp,sizeof(tmp),"Score: %d\nLines: %d",field->score,field->linec[0]+field->linec[1]*2+field->linec[2]*3+field->linec[3]*4);
     if ((tmpc<0)||(tmpc>sizeof(tmp))) tmpc=0;
-    field->score_texid=font_tex_oneline(g.font,tmp,tmpc,dstw,0xffffffff);
+    field->score_texid=font_tex_multiline(g.font,tmp,tmpc,dstw,dsth,0xffffffff);
     egg_texture_get_status(&field->score_w,&field->score_h,field->score_texid);
+    field->disp_score=field->score;
   }
   
   graf_draw_decal(&g.graf,field->score_texid,dstx,dsty+(dsth>>1)-(field->score_h>>1),0,0,field->score_w,field->score_h,0);
@@ -98,5 +103,42 @@ void field_render_single_score(struct field *field,int16_t dstx,int16_t dsty,int
  */
  
 void field_render_combined_score(struct field *l,struct field *r,int16_t dstx,int16_t dsty,int16_t dstw,int16_t dsth) {
-  //TODO
+
+  /* Rebuild texture if either score changed.
+   * We use the texture from (l).
+   */
+  if ((l->disp_score!=l->score)||(r->disp_score!=r->score)) {
+    l->disp_score=l->score;
+    r->disp_score=r->score;
+    int llinec=l->linec[0]+l->linec[1]*2+l->linec[2]*3+l->linec[3]*4;
+    int rlinec=r->linec[0]+r->linec[1]*2+r->linec[2]*3+r->linec[3]*4;
+    int lineh=font_get_line_height(g.font);
+    int boty=dsth>>1;
+    int topy=boty-lineh;
+    char *rgba=calloc(dstw*dsth,4);
+    if (!rgba) return;
+    char tmp[64];
+    int tmpc;
+    if (((tmpc=snprintf(tmp,sizeof(tmp),"%d",l->score))>0)&&(tmpc<sizeof(tmp))) {
+      font_render_string(rgba,dstw,dsth,dstw<<2,0,topy,g.font,tmp,tmpc,0xffffffff);
+    }
+    if (((tmpc=snprintf(tmp,sizeof(tmp),"%d",llinec))>0)&&(tmpc<sizeof(tmp))) {
+      font_render_string(rgba,dstw,dsth,dstw<<2,0,boty,g.font,tmp,tmpc,0xffffffff);
+    }
+    if (((tmpc=snprintf(tmp,sizeof(tmp),"%d",r->score))>0)&&(tmpc<sizeof(tmp))) {
+      int sw=font_measure_line(g.font,tmp,tmpc);
+      font_render_string(rgba,dstw,dsth,dstw<<2,dstw-sw,topy,g.font,tmp,tmpc,0xffffffff);
+    }
+    if (((tmpc=snprintf(tmp,sizeof(tmp),"%d",rlinec))>0)&&(tmpc<sizeof(tmp))) {
+      int sw=font_measure_line(g.font,tmp,tmpc);
+      font_render_string(rgba,dstw,dsth,dstw<<2,dstw-sw,boty,g.font,tmp,tmpc,0xffffffff);
+    }
+    if (!l->score_texid) l->score_texid=egg_texture_new();
+    egg_texture_load_raw(l->score_texid,EGG_TEX_FMT_RGBA,dstw,dsth,dstw<<2,rgba,dstw*dsth*4);
+    l->score_w=dstw;
+    l->score_h=dsth;
+    free(rgba);
+  }
+  
+  graf_draw_decal(&g.graf,l->score_texid,dstx+(dstw>>1)-(l->score_w>>1),dsty+(dsth>>1)-(l->score_h>>1),0,0,l->score_w,l->score_h,0);
 }
