@@ -1,11 +1,63 @@
 #include "tetris.h"
 
+/* Set level and update scoring constants.
+ * No harm in calling redundantly, or with (level) too high.
+ */
+ 
+static void field_next_level(struct field *field,int level) {
+
+  /* NES Tetris I'm told goes up to like 30?
+   * But I've only been able to test the first 20, so that's all we imitate.
+   */
+  field->level=level;
+  if (field->level<0) field->level=0;
+  else if (field->level>19) field->level=19;
+  fprintf(stderr,"%s begin level %d\n",__func__,field->level);
+  
+  /* Scoring increases linearly with level.
+   */
+  field->linevalue[0]=(field->level+1)*40;
+  field->linevalue[1]=(field->level+1)*100;
+  field->linevalue[2]=(field->level+1)*300;
+  field->linevalue[3]=(field->level+1)*1200;
+  
+  /* Drop time is kind of arbitrary.
+   * I got these numbers by counting frames in NES Tetris.
+   * We use continuous time, so we actually don't need to make eg (10,11,12) the same.
+   * But NES did it that way and I want to match as close as possible.
+   */
+  const double FRAMETIME=0.016666;
+  switch (field->level) {
+    case  0: field->droptime=FRAMETIME*48.0; break;
+    case  1: field->droptime=FRAMETIME*43.0; break;
+    case  2: field->droptime=FRAMETIME*38.0; break;
+    case  3: field->droptime=FRAMETIME*33.0; break;
+    case  4: field->droptime=FRAMETIME*28.0; break;
+    case  5: field->droptime=FRAMETIME*23.0; break;
+    case  6: field->droptime=FRAMETIME*18.0; break;
+    case  7: field->droptime=FRAMETIME*13.0; break;
+    case  8: field->droptime=FRAMETIME* 8.0; break;
+    case  9: field->droptime=FRAMETIME* 6.0; break;
+    case 10: field->droptime=FRAMETIME* 5.0; break;
+    case 11: field->droptime=FRAMETIME* 5.0; break;
+    case 12: field->droptime=FRAMETIME* 5.0; break;
+    case 13: field->droptime=FRAMETIME* 4.0; break;
+    case 14: field->droptime=FRAMETIME* 4.0; break;
+    case 15: field->droptime=FRAMETIME* 4.0; break;
+    case 16: field->droptime=FRAMETIME* 3.0; break;
+    case 17: field->droptime=FRAMETIME* 3.0; break;
+    case 18: field->droptime=FRAMETIME* 3.0; break;
+    case 19: field->droptime=FRAMETIME* 2.0; break;
+  }
+}
+
 /* Init.
  */
  
-int field_init(struct field *field,int readhead,int playerc) {
+int field_init(struct field *field,int readhead,int playerc,int level) {
   if ((playerc<1)||(playerc>PLAYER_LIMIT)) return -1;
   if ((readhead<0)||(readhead>1)) return -1;
+  if ((level<0)||(level>19)) return -1;
   
   egg_texture_del(field->score_texid);
 
@@ -22,11 +74,7 @@ int field_init(struct field *field,int readhead,int playerc) {
     player->x=0;
     player->y=0;
   }
-  field->droptime=0.500;//TODO Store these somewhere, per level. And make such a thing as "level".
-  field->linevalue[0]=40;//'' currently matching Level 0 of NES Tetris.
-  field->linevalue[1]=100;//''
-  field->linevalue[2]=300;//''
-  field->linevalue[3]=1200;//''
+  field_next_level(field,level);
   field->dropscore=1; // *rowc
   field->dirty=0;
   field->disp_score=-1;
@@ -169,7 +217,7 @@ static void player_move(struct field *field,struct player *player,int d) {
     if (!(d=player->motion)) return;
   } else {
     player->motion=d;
-    player->motionclock=0.0;
+    player->motionclock=0.0-MOTION_INITIAL_DELAY;
   }
   player->x+=d;
   if (player_collision(field,player)) {
@@ -227,21 +275,33 @@ static void field_check_cells(struct field *field) {
       p+=FIELDW;
     }
   }
-  if (lines_scored) {
-    field->rmclock=RMANIMTIME;
-    switch (lines_scored) {
-      case 1: case 2: case 3: egg_play_sound(RID_sound_lines); break;
-      default: egg_play_sound(RID_sound_tetris); break;
-    }
-    // In theory, there can be more than 4 at once. In practice, I don't think it can be done reliably (depends on the order of players in our list).
-    while (lines_scored>4) {
-      lines_scored-=4;
-      field->linec[3]++;
-      if ((field->score+=field->linevalue[3])>SCORE_LIMIT) field->score=SCORE_LIMIT;
-    }
-    field->linec[lines_scored-1]++;
-    if ((field->score+=field->linevalue[lines_scored-1])>SCORE_LIMIT) field->score=SCORE_LIMIT;
+  if (lines_scored<1) return;
+  
+  field->rmclock=RMANIMTIME;
+  switch (lines_scored) {
+    case 1: case 2: case 3: egg_play_sound(RID_sound_lines); break;
+    default: egg_play_sound(RID_sound_tetris); break;
   }
+  
+  /* If the new lines advance us to another level, they are scored against the new level's constants.
+   * NES Tetris had some funny rules about level-up: Beyond 99 lines, it's every ten lines, regardless of the current level.
+   * I don't know why that rule exists. Maybe it's a bug.
+   * We are going to handle levels more simply: Level is just linec/10.
+   */
+  int nlc=field->linec[0]+field->linec[1]*2+field->linec[2]*3+field->linec[3]*4+lines_scored;
+  int to_level=nlc/10;
+  if ((to_level>field->level)&&(to_level<20)) {
+    field_next_level(field,to_level);
+  }
+  
+  // In theory, there can be more than 4 at once. In practice, I don't think it can be done reliably (depends on the order of players in our list).
+  while (lines_scored>4) {
+    lines_scored-=4;
+    field->linec[3]++;
+    if ((field->score+=field->linevalue[3])>SCORE_LIMIT) field->score=SCORE_LIMIT;
+  }
+  field->linec[lines_scored-1]++;
+  if ((field->score+=field->linevalue[lines_scored-1])>SCORE_LIMIT) field->score=SCORE_LIMIT;
 }
 
 /* Select a position for a new tetromino that doesn't collide with anything existing.
@@ -358,15 +418,14 @@ static int player_draw(struct field *field,struct player *player) {
   player->xform=xform;
   player->x=x;
   player->y=y;
-  player->dropclock=0.0; // TODO Should there be a greater delay initially?
+  player->dropclock=-NEW_PIECE_GRACE_TIME;
   return 1;
 }
 
-/* Update.
+/* Update all players of a field.
  */
-
-void field_update(struct field *field,double elapsed) {
-  if (field->finished) return;
+ 
+static void field_update_players(struct field *field,double elapsed) {
   struct player *player=field->playerv;
   int i=field->playerc;
   for (;i-->0;player++) {
@@ -397,11 +456,10 @@ void field_update(struct field *field,double elapsed) {
     }
     
     // Repeat horizontal motion when held, per a clock.
-    // TODO I think we need a slightly longer interval for the first repeat.
     if (player->motion) {
       player->motionclock+=elapsed;
-      while (player->motionclock>=HORZ_REPEAT_TIME) {
-        player->motionclock-=HORZ_REPEAT_TIME;
+      while (player->motionclock>=MOTION_TIME) {
+        player->motionclock-=MOTION_TIME;
         player_move(field,player,0);
       }
     }
@@ -418,6 +476,18 @@ void field_update(struct field *field,double elapsed) {
         break;
       }
     }
+  }
+}
+
+/* Update.
+ */
+
+void field_update(struct field *field,double elapsed) {
+  if (field->finished) return;
+  
+  // Pause hard during line removal.
+  if (field->rmclock<=0.0) {
+    field_update_players(field,elapsed);
   }
   
   // Tick the removal animation clock.

@@ -31,7 +31,7 @@ int egg_client_init() {
   int seed=(int)(fmod(egg_time_real()*500.0,2000000000.0));
   fprintf(stderr,"egg_time_real: %f, seed=0x%08x\n",egg_time_real(),seed);
   if (bag_reset(g.fieldc,seed)<0) return -1;
-  if (field_init(&g.l,0,1)<0) return -1;
+  if (field_init(&g.l,0,1,9)<0) return -1;
   g.l.playerv[0].playerid=1;
   g.l.playerv[1].playerid=3;
   g.l.playerv[2].playerid=5;
@@ -41,7 +41,7 @@ int egg_client_init() {
   g.l.playerv[6].playerid=6;
   g.l.playerv[7].playerid=8;
   if (g.fieldc==2) {
-    if (field_init(&g.r,1,4)<0) return -1;
+    if (field_init(&g.r,1,4,0)<0) return -1;
     g.r.playerv[0].playerid=2;
     g.r.playerv[1].playerid=4;
     g.r.playerv[2].playerid=6;
@@ -60,12 +60,26 @@ int egg_client_init() {
   return 0;
 }
 
+static int pvinput=0;//XXX input is field's problem, not mine
+
 void egg_client_update(double elapsed) {
   if (g.running) {
     field_update(&g.l,elapsed);
     if (g.fieldc==2) {
       field_update(&g.r,elapsed);
     }
+  }
+  
+  //XXX TEMP restart on A if all fields are finished.
+  int input=egg_input_get_one(0);
+  if (input!=pvinput) {
+    if ((input&EGG_BTN_SOUTH)&&!(pvinput&EGG_BTN_SOUTH)) {
+      if (g.l.finished&&((g.fieldc==1)||g.r.finished)) {
+        field_init(&g.l,0,1,9);
+        if (g.fieldc==2) field_init(&g.r,1,4,0);
+      }
+    }
+    pvinput=input;
   }
 }
 

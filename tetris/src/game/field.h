@@ -11,7 +11,17 @@
 /* During the removal animation, the rendered field does not match the model, and some operations are suspended.
  * So don't let it last too long.
  */
-#define RMANIMTIME 0.375
+//#define RMANIMTIME 0.375
+#define RMANIMTIME (20.0*0.016666)
+
+/* New pieces stay at the top row for so long before their first drop.
+ * This does not change per level.
+ * I've measured it in NES Tetris to be exactly 10 frames.
+ */
+#define NEW_PIECE_GRACE_TIME 0.166666
+
+#define MOTION_TIME (6.0*0.016666)
+#define MOTION_INITIAL_DELAY (4.0*0.016666)
 
 struct field {
   int readhead; // For talking to the bag.
@@ -30,6 +40,7 @@ struct field {
   uint8_t cellv[FIELDW*FIELDH]; // Cemented tiles only.
   double droptime;
   int dirty;
+  int level;
   int dropscore; // Per level.
   int linevalue[4]; // How much is each play worth? Varies by level.
   int linec[4]; // [singles,doubles,triples,tetri]
@@ -41,7 +52,7 @@ struct field {
   double rmclock; // Counts down while a removal animation in progress.
 };
 
-int field_init(struct field *field,int readhead,int playerc);
+int field_init(struct field *field,int readhead,int playerc,int level);
 
 void field_update(struct field *field,double elapsed);
 

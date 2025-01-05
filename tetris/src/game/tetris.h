@@ -9,7 +9,6 @@
 
 #define PLAYER_LIMIT 8
 
-#define HORZ_REPEAT_TIME 0.125
 #define FAST_FALL_TIME 0.040
 
 #define SCORE_LIMIT 999999
