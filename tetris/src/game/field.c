@@ -107,9 +107,11 @@ static int player_collision(const struct field *field,const struct player *playe
 }
 
 /* Drop one player's tetromino.
+ * Returns >0 if we were stopped by another piece.
+ * Caller should arrange to try again next frame in that case.
  */
  
-static void player_fall(struct field *field,struct player *player) {
+static int player_fall(struct field *field,struct player *player) {
   player->y++;
   switch (player_collision(field,player)) {
     case COLLIDE_FLOOR: {
@@ -119,9 +121,10 @@ static void player_fall(struct field *field,struct player *player) {
     case COLLIDE_WALL: // Wall shouldn't be possible on a vertical move.
     case COLLIDE_OTHER: {
         player->y--;
-        player->dropclock=field->droptime-0.001; // Cheat dropclock so we try again immediately. We'll end up in sync with the blocking tile.
-      } break;
+        return 1;
+      }
   }
+  return 0;
 }
 
 /* Rotate player's tetromino.
@@ -364,7 +367,11 @@ void field_update(struct field *field,double elapsed) {
     player->dropclock+=elapsed;
     while (player->dropclock>=droptime) {
       player->dropclock-=droptime;
-      player_fall(field,player);
+      if (player_fall(field,player)>0) {
+        // Bumped into another player. Spam falling, make sure it triggers next frame too.
+        player->dropclock=droptime-0.001;
+        break;
+      }
     }
   }
   
