@@ -40,5 +40,15 @@ void render();
 // db.c
 void db_init();
 int db_add(int playerc,int linec,int score);
+int db_modseq(); // => Changes whenever the internal state changes. Zero only if no scores loaded.
+
+/* Populate up to (dsta), sorted by (score) descending.
+ * This interleaves playerc buckets as needed.
+ * Never returns >dsta or <0.
+ */
+struct db_score {
+  int playerc,linec,score,year,month,day,hour,minute;
+};
+int db_get_scores(struct db_score *dst,int dsta);
 
 #endif

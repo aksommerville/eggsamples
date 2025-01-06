@@ -16,9 +16,10 @@ Requires [Egg](https://github.com/aksommerville/egg) to build.
 ## TODO
 
 - [x] Fanfare on level change.
-- [ ] Persist and report high score.
-- - [ ] Show relevant scores. [render.c]
+- [x] Persist and report high score.
+- - [x] Show relevant scores. [render.c]
 - [ ] Menus.
+- [ ] Observed a game-over when the next tetromino was O and there were four cells available at the far right. Should have continued there.
 
 ## Scores
 
