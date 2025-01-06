@@ -369,7 +369,8 @@ static int choose_position_for_tiles(int *x,int *y,const struct tetr_tile *tilev
       *x=xmid-r;
       if (check_new_tetromino_position(field,*x,*y,tilev,tilec)>=0) return 0;
     }
-    if (r&&(xmid+r+xz+1>=FIELDW)) {
+    if (!r) continue;
+    if (xmid+r+xz>=FIELDW) {
       rightdone=1;
     } else {
       *x=xmid+r;

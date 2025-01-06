@@ -15,11 +15,10 @@ Requires [Egg](https://github.com/aksommerville/egg) to build.
 
 ## TODO
 
-- [x] Fanfare on level change.
-- [x] Persist and report high score.
-- - [x] Show relevant scores. [render.c]
 - [ ] Menus.
-- [ ] Observed a game-over when the next tetromino was O and there were four cells available at the far right. Should have continued there.
+- [x] Observed a game-over when the next tetromino was O and there were four cells available at the far right. Should have continued there.
+- - random seed 89079556 exposes it without input. In fact, in that case, the failing tetromino is a S, and there's 3x2 available, shouldn't even need to transform.
+- - ...was discarding possibilities that touch the right edge due to an off-by-one error in choose_position_for_tiles().
 
 ## Scores
 
