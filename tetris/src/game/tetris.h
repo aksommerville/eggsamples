@@ -37,4 +37,8 @@ extern struct g {
 // render.c
 void render();
 
+// db.c
+void db_init();
+int db_add(int playerc,int linec,int score);
+
 #endif

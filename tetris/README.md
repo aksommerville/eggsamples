@@ -11,11 +11,13 @@ Requires [Egg](https://github.com/aksommerville/egg) to build.
 - Levels stop at 19.
 - Level increases when lines reach (level*10), regardless of which you start at.
 - I get more lines and higher scores here than on the NES, marginally. Not sure how to account for that.
+- Incoming pieces appear wherever there's room on the top, and might be rotated.
 
 ## TODO
 
 - [x] Fanfare on level change.
 - [ ] Persist and report high score.
+- - [ ] Show relevant scores. [render.c]
 - [ ] Menus.
 
 ## Scores
@@ -44,3 +46,4 @@ Added line removal delay...
 207 : 391526
 139 : 194157
 200 : 416274
+165 : 302561

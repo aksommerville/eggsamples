@@ -148,4 +148,6 @@ void render() {
       field_render_single_score(&g.l,r.score.x,r.score.y,r.score.w,r.score.h);
     }
   }
+  
+  //TODO Show high score.
 }

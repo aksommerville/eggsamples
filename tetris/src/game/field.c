@@ -443,6 +443,8 @@ static void field_update_players(struct field *field,double elapsed) {
       if (err<0) {
         egg_play_sound(RID_sound_fatal);
         field->finished=1;
+        int linec=field->linec[0]+field->linec[1]*2+field->linec[2]*3+field->linec[3]*4;
+        db_add(field->playerc,linec,field->score);
         return;
       }
       if (!err) continue;

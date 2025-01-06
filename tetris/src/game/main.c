@@ -25,11 +25,12 @@ int egg_client_init() {
   
   if (egg_texture_load_image(g.texid_tiles=egg_texture_new(),RID_image_tiles)<0) return -1;
   
-  srand_auto();
+  srand_auto(); // Probably not necessary... Where it counts, we use a private PRNG. See bag.c.
+  
+  db_init();
   
   g.fieldc=1;
   int seed=(int)(fmod(egg_time_real()*500.0,2000000000.0));
-  fprintf(stderr,"egg_time_real: %f, seed=0x%08x\n",egg_time_real(),seed);
   if (bag_reset(g.fieldc,seed)<0) return -1;
   if (field_init(&g.l,0,1,9)<0) return -1;
   g.l.playerv[0].playerid=1;
