@@ -44,7 +44,7 @@ Massively Local Multiplayer Tetris.
 - - [ ] Orthographic Racing
 - Clone some familiar games, ones that aren't too involved:
 - - [x] Snake
-- - [ ] Tetris
+- - [x] Tetris
 - - [x] Minesweeper
 - - [ ] Sudoku
 - - [ ] Picross

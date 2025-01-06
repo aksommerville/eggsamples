@@ -11,39 +11,25 @@ Requires [Egg](https://github.com/aksommerville/egg) to build.
 - Levels stop at 19.
 - Level increases when lines reach (level*10), regardless of which you start at.
 - I get more lines and higher scores here than on the NES, marginally. Not sure how to account for that.
+- - I'm able to play somewhat reliably on level 19 here. That's not the case on NES, over there getting a line on 19 is usually dumb luck.
 - Incoming pieces appear wherever there's room on the top, and might be rotated.
+- PRNG might not be exactly the same, I haven't rigorously tested the NES's and there's a few arbitrary constants involved.
 
-## TODO
+## Things to fix, if we wanted to do it right
 
-- [ ] Menus.
-- [x] Observed a game-over when the next tetromino was O and there were four cells available at the far right. Should have continued there.
-- - random seed 89079556 exposes it without input. In fact, in that case, the failing tetromino is a S, and there's 3x2 available, shouldn't even need to transform.
-- - ...was discarding possibilities that touch the right edge due to an off-by-one error in choose_position_for_tiles().
+This is just a demo that I got a little carried away with.
+If we wanted to get _fully_ carried away...
 
-## Scores
-
-It really does feel like NES Tetris now.
-The missing line-score delay becomes apparent to me around level 10 or 13.
-Play seriously a few times, let's see if I score in my usual range.
-A typical round for me on the NES is 170-180 lines and 250-300k points.
-With an all-time high around 477k -- If I beat that here, something is broken.
-
-161 : 281124
-151 : 239272
-167 : 196265
-
-^ duh oops i'd been starting at level zero
-
- 33 :  49442
-204 : 315772
-161 : 359158
-117 : 224143
-191 : 323703
-
-It's definitely not identical. But close enough that I can live with it.
-Added line removal delay...
-
-207 : 391526
-139 : 194157
-200 : 416274
-165 : 302561
+- Menu is weird and hacky, needs cleaned up all around.
+- Let the two fields start at different levels.
+- Specific selectable rules for multifield games:
+- - Terminate both at the first loss?
+- - Throw penalty blocks on multi-line plays?
+- - Play to a given line count?
+- More songs, and let the user pick. "None" should be an option.
+- Detailed stats. We're already tracking but not using line counts per multiplier. Could do count per tetromino like NES.
+- Enter name for high score list.
+- Options to pause and abort during play.
+- Higher speed limit, I guess implement levels 20..29? I'm able to play at 19, which means it's not fast enough.
+- Show current level in score display, or somewhere.
+- Test multiplayer and fix the inevitable bugs. As I'm committing this, I haven't yet played with another human.

@@ -55,6 +55,8 @@ struct field {
   int finished;
   uint8_t rmrowv[FIELDH]; // When (rmclock>0), nonzero members here are being removed. Not necessarily contiguous.
   double rmclock; // Counts down while a removal animation in progress.
+  double end_blackout; // Counts down at finish, before we allow end_ack.
+  int end_ack; // Nonzero if user acknowledges termination.
 };
 
 int field_init(struct field *field,int readhead,int playerc,int level);

@@ -92,6 +92,7 @@ static void field_render_level(struct field *field,int16_t parentx,int16_t paren
  */
  
 void field_render(struct field *field,int16_t dstx,int16_t dsty) {
+  if (field->end_ack) return;
   if (field->finished) {
     graf_draw_rect(&g.graf,dstx,dsty,FIELDW*NS_sys_tilesize,FIELDH*NS_sys_tilesize,0x400010ff);
   }
@@ -108,6 +109,7 @@ void field_render(struct field *field,int16_t dstx,int16_t dsty) {
  */
  
 void field_render_next(struct field *field,int16_t dstx,int16_t dsty,int16_t dstw,int16_t dsth) {
+  if (field->finished) return;
   int tetr=bag_peek(field->readhead);
   
   // If we have at least 4x4 tiles, render the tetromino exactly as it appears in play.

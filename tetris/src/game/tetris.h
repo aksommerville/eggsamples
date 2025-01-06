@@ -32,6 +32,13 @@ extern struct g {
   int fieldc; // 1,2: How many fields to render. Modes should try to support both.
   int running;
   struct field l,r; // Game models.
+  struct cursor { // Half-assed menu model.
+    int pvinput;
+    int p; // 0..9=left, 10..19=right, 20=fieldc-L, 21=fieldc-R
+    int decline; // Pressed B to opt out.
+    uint32_t color;
+  } cursorv[8];
+  double input_blackout;
 } g;
 
 // render.c

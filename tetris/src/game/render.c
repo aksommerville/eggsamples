@@ -174,6 +174,72 @@ static void draw_hiscores(const struct rect *bounds) {
   graf_draw_decal(&g.graf,r.hstexid,bounds->x,bounds->y,0,0,cpw,cph,0);
 }
 
+/* Draw menu.
+ */
+ 
+static void draw_menu(const struct rect *bounds,int fieldid) {
+
+  // Draw cursors.
+  const struct cursor *cursor=g.cursorv;
+  int i=8;
+  for (;i-->0;cursor++) {
+    if (cursor->decline) continue; // Manually opted out.
+    if (!cursor->pvinput) continue; // Not even CD? Cursor doesn't exist.
+    if (cursor->p<0) continue; // Invalid.
+    if (cursor->p<20) { // Level select.
+      int cfield=cursor->p/10;
+      if (cfield==fieldid) {
+        int col=cursor->p%5;
+        int row=(cursor->p/5)&1;
+        graf_draw_rect(&g.graf,
+          bounds->x+NS_sys_tilesize*col*2+(NS_sys_tilesize>>2),
+          bounds->y+NS_sys_tilesize*(7+row*2)-(NS_sys_tilesize>>2),
+          NS_sys_tilesize+(NS_sys_tilesize>>1),
+          NS_sys_tilesize+(NS_sys_tilesize>>1),
+          cursor->color
+        );
+      }
+    } else if (cursor->p==20+fieldid) { // Single/Double
+      graf_draw_rect(&g.graf,
+        bounds->x+NS_sys_tilesize+((r.fieldc-1)*NS_sys_tilesize*4),
+        bounds->y+NS_sys_tilesize*3+(NS_sys_tilesize>>1),
+        NS_sys_tilesize*4,NS_sys_tilesize*3,
+        cursor->color
+      );
+    }
+  }
+
+  // A big colorful "TETRIS" on top.
+  graf_draw_decal(&g.graf,g.texid_tiles,
+    bounds->x+(bounds->w>>1)-NS_sys_tilesize*5,bounds->y,
+    0,NS_sys_tilesize*5,
+    NS_sys_tilesize*10,NS_sys_tilesize*3,0
+  );
+  
+  // Single/double selector.
+  graf_draw_decal(&g.graf,g.texid_tiles,
+    bounds->x+NS_sys_tilesize*1+(NS_sys_tilesize>>1),
+    bounds->y+NS_sys_tilesize*4,
+    NS_sys_tilesize*10,NS_sys_tilesize*5,
+    NS_sys_tilesize*3,NS_sys_tilesize*2,0
+  );
+  graf_draw_decal(&g.graf,g.texid_tiles,
+    bounds->x+NS_sys_tilesize*5+(NS_sys_tilesize>>1),
+    bounds->y+NS_sys_tilesize*4,
+    NS_sys_tilesize*13,NS_sys_tilesize*5,
+    NS_sys_tilesize*3,NS_sys_tilesize*2,0
+  );
+  
+  // Levels 0..9
+  int16_t dsty=bounds->y+NS_sys_tilesize*7+(NS_sys_tilesize>>1);
+  int row=0; for (;row<2;row++,dsty+=NS_sys_tilesize*2) {
+    int16_t dstx=bounds->x+NS_sys_tilesize;
+    int col=0; for (;col<5;col++,dstx+=NS_sys_tilesize*2) {
+      graf_draw_tile(&g.graf,g.texid_tiles,dstx,dsty,0x80+row*5+col,0);
+    }
+  }
+}
+
 /* Recalculate layout.
  */
  
@@ -263,6 +329,8 @@ void render() {
     draw_box(&r.fieldr);
     draw_box(&r.nextr);
   }
+  draw_hiscores(&r.hiscores);
+  draw_unused(&r.unused);
   
   /* If running, draw the games.
    */
@@ -276,8 +344,13 @@ void render() {
     } else {
       field_render_single_score(&g.l,r.score.x,r.score.y,r.score.w,r.score.h);
     }
+    
+  /* Not running, draw the menus.
+   */
+  } else {
+    draw_menu(&r.fieldl,0);
+    if (r.fieldc==2) {
+      draw_menu(&r.fieldr,1);
+    }
   }
-  
-  draw_hiscores(&r.hiscores);
-  draw_unused(&r.unused);
 }

@@ -59,7 +59,7 @@ static void field_next_level(struct field *field,int level) {
  */
  
 int field_init(struct field *field,int readhead,int playerc,int level) {
-  if ((playerc<1)||(playerc>PLAYER_LIMIT)) return -1;
+  if ((playerc<0)||(playerc>PLAYER_LIMIT)) return -1;
   if ((readhead<0)||(readhead>1)) return -1;
   if ((level<0)||(level>19)) return -1;
   
@@ -68,6 +68,11 @@ int field_init(struct field *field,int readhead,int playerc,int level) {
 
   memset(field,0,sizeof(struct field));
   field->readhead=readhead;
+  if (!playerc) {
+    field->finished=1;
+    field->end_ack=1;
+    return 0;
+  }
   field->playerc=playerc;
   struct player *player=field->playerv;
   int i=0;
@@ -489,11 +494,31 @@ static void field_update_players(struct field *field,double elapsed) {
   }
 }
 
+/* Poll players for end acknowledgement.
+ */
+ 
+static void field_check_end_ack(struct field *field) {
+  struct player *player=field->playerv;
+  int i=field->playerc;
+  for (;i-->0;player++) {
+    int input=egg_input_get_one(player->playerid);
+    if (input!=player->pvinput) {
+      if ((input&EGG_BTN_SOUTH)&&!(player->pvinput&EGG_BTN_SOUTH)) field->end_ack=1;
+      player->pvinput=input;
+    }
+  }
+}
+
 /* Update.
  */
 
 void field_update(struct field *field,double elapsed) {
-  if (field->finished) return;
+  if (field->finished) {
+    if (field->end_ack) return;
+    if ((field->end_blackout-=elapsed)>0.0) return;
+    field_check_end_ack(field);
+    return;
+  }
   
   if (field->disp_level_clock>0.0) {
     field->disp_level_clock-=elapsed;
