@@ -32,6 +32,10 @@ Nothing special technically.
 Massively Local Multiplayer Tetris.
 1..8 players can play in one field, or two fields competitively.
 
+### rpg
+
+Skeleton for a formal RPG a la Dragon Warrior.
+
 ## TODO
 
 - Implement some well-known styles, building out specific framework as needed:
@@ -47,6 +51,7 @@ Massively Local Multiplayer Tetris.
 - - [x] Tetris
 - - [x] Minesweeper
 - - [ ] Sudoku
+- - - See https://github.com/aksommerville/tiny-sudoku -- I've written Sudoku before, but its generator is not perfect.
 - - [ ] Picross
 - - [ ] Space Invaders
 - Technical demos, proving out questions:
