@@ -10,10 +10,14 @@ If you want to make something along the lines of Dragon Warrior or Pokemon, this
 
 ## TODO
 
+- [x] Global resource store. We already have multiple of them, it's getting silly.
 - [x] Generic layer stack
 - [x] World model
 - - [x] Load and render map.
 - - [x] Sprites
 - - [x] Boat
 - [ ] Battle model
+- - [ ] Visual scene.
+- - [ ] Commit state back to world.
+- [ ] Inventory
 - [ ] Dialogue, cutscenes

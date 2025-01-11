@@ -30,13 +30,25 @@ extern struct g {
   struct world *world; // Present during gameplay (even non-world modes like combat). Null at main menu.
 } g;
 
+/* Global resource TOC.
+ * We track certain resource types (not all of them).
+ * Maps and tilesheets are partly decoded during load.
+ */
+int rpg_res_init(const void *rom,int romc);
+int rpg_res_get(void *dstpp,int tid,int rid);
+struct map *rpg_map_get(int rid);
+
 /* Helpers for scalar direction, converting to and from deltas.
  */
 
-#define DIR_N 0x40
-#define DIR_W 0x10
-#define DIR_E 0x08
-#define DIR_S 0x02
+#define DIR_NW 0x80
+#define DIR_N  0x40
+#define DIR_NE 0x20
+#define DIR_W  0x10
+#define DIR_E  0x08
+#define DIR_SW 0x04
+#define DIR_S  0x02
+#define DIR_SE 0x01
 static inline void delta_from_dir(int *dx,int *dy,uint8_t dir) {
   switch (dir&(DIR_W|DIR_E)) {
     case DIR_W: *dx=-1; break;

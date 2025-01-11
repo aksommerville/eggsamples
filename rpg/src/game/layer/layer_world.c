@@ -26,8 +26,8 @@ static void _world_del(struct layer *layer) {
 static void _world_input(struct layer *layer,int btnid,int value,int state) {
   if (!g.world) { layer->defunct=1; return; }
   if (btnid==EGG_BTN_FOCUS) {
-    if (value) world_suspend(g.world);
-    else world_resume(g.world,state);
+    if (value) world_resume(g.world,state);
+    else world_suspend(g.world);
   } else {
     world_input(g.world,btnid,value,state);
   }

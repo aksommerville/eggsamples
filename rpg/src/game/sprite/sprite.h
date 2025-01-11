@@ -50,12 +50,6 @@ struct sprite_type {
   void (*bump)(struct sprite *sprite,struct sprite *hero);
 };
 
-/* We manage a global store of sprite resources, similar to map.
- * Callers don't need to care.
- */
-int sprites_init(const void *rom,int romc);
-int sprite_res_get(const struct sprite_type **type,void *dstpp,int rid);
-
 /* Sprite type IDs are defined in shared_symbols.h.
  */
 const struct sprite_type *sprite_type_by_id(int id);
@@ -83,7 +77,8 @@ struct sprite *sprite_new_res(int rid,uint8_t x,uint8_t y,uint32_t arg);
 
 /* API for specific sprite types.
  ********************************************************************************/
- 
+
+// (0,0,0) to cancel all motion.
 void hero_motion(struct sprite *sprite,int dx,int dy,int value);
 
 #endif

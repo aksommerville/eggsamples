@@ -317,6 +317,10 @@ void hero_motion(struct sprite *sprite,int dx,int dy,int value) {
     if (dx) { SPRITE->indx=dx; SPRITE->facedir=dir_from_delta(dx,0); }
     if (dy) { SPRITE->indy=dy; SPRITE->facedir=dir_from_delta(0,dy); }
     if (SPRITE->facedir!=pvfacedir) SPRITE->walk_impulse_blackout=HERO_WALK_IMPULSE_BLACKOUT_TIME;
+  } else if (!dx&&!dy) {
+    SPRITE->indx=SPRITE->indy=0;
+    SPRITE->walk_impulse_blackout=0.0;
+    SPRITE->bump_reject_clock=0.0;
   } else {
     if (dx==SPRITE->indx) { SPRITE->indx=0; if (SPRITE->indy) SPRITE->facedir=dir_from_delta(0,SPRITE->indy); }
     if (dy==SPRITE->indy) { SPRITE->indy=0; if (SPRITE->indx) SPRITE->facedir=dir_from_delta(SPRITE->indx,0); }

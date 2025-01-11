@@ -15,89 +15,11 @@ const struct sprite_type *sprite_type_by_id(int id) {
   return 0;
 }
 
-/* Global store.
- */
- 
-static struct sprites {
-  struct sprite_res {
-    int rid;
-    const void *cmdv;
-    int cmdc;
-    const struct sprite_type *type;
-  } *v;
-  int c,a;
-} gsprites={0};
-
-/* Initialize global store.
- */
- 
-int sprites_init(const void *rom,int romc) {
-  struct rom_reader reader;
-  if (rom_reader_init(&reader,rom,romc)<0) return -1;
-  struct rom_res *res;
-  while (res=rom_reader_next(&reader)) {
-    if (res->tid<EGG_TID_sprite) continue;
-    if (res->tid>EGG_TID_sprite) break;
-    
-    /* Extract type first.
-     * At instantiation, we're going to need this before anything else.
-     */
-    const struct sprite_type *type=0;
-    struct rom_sprite rspr;
-    if (rom_sprite_decode(&rspr,res->v,res->c)<0) {
-      fprintf(stderr,"sprite:%d malformed\n",res->rid);
-      return -1;
-    }
-    struct rom_command_reader sreader={.v=rspr.cmdv,.c=rspr.cmdc};
-    struct rom_command cmd;
-    while (rom_command_reader_next(&cmd,&sreader)>0) {
-      if (cmd.opcode==CMD_sprite_type) {
-        int sprite_type_id=(cmd.argv[0]<<8)|cmd.argv[1];
-        if (!(type=sprite_type_by_id(sprite_type_id))) {
-          fprintf(stderr,"sprite:%d refers to unknown type %d\n",res->rid,sprite_type_id);
-          return -1;
-        }
-        break;
-      }
-    }
-    if (!type) {
-      fprintf(stderr,"sprite:%d missing 'type' command\n",res->rid);
-      return -1;
-    }
-    
-    if (gsprites.c>=gsprites.a) {
-      int na=gsprites.c+32;
-      if (na>INT_MAX/sizeof(struct sprite_res)) return -1;
-      void *nv=realloc(gsprites.v,sizeof(struct sprite_res)*na);
-      if (!nv) return -1;
-      gsprites.v=nv;
-      gsprites.a=na;
-    }
-    struct sprite_res *sres=gsprites.v+gsprites.c++;
-    sres->rid=res->rid;
-    sres->cmdv=rspr.cmdv;
-    sres->cmdc=rspr.cmdc;
-    sres->type=type;
-  }
-  return 0;
-}
-
-/* Get resource from store.
- */
- 
-int sprite_res_get(const struct sprite_type **type,void *dstpp,int rid) {
-  if (rid<1) return 0;
-  int lo=0,hi=gsprites.c;
-  while (lo<hi) {
-    int ck=(lo+hi)>>1;
-    const struct sprite_res *q=gsprites.v+ck;
-         if (rid<q->rid) hi=ck;
-    else if (rid>q->rid) lo=ck+1;
-    else {
-      *type=q->type;
-      *(const void**)dstpp=q->cmdv;
-      return q->cmdc;
-    }
+const struct sprite_type *sprite_type_from_commands(const void *src,int srcc) {
+  struct rom_command_reader reader={.v=src,.c=srcc};
+  struct rom_command cmd;
+  while (rom_command_reader_next(&cmd,&reader)>0) {
+    if (cmd.opcode==CMD_sprite_type) return sprite_type_by_id((cmd.argv[0]<<8)|cmd.argv[1]);
   }
   return 0;
 }
@@ -170,9 +92,10 @@ struct sprite *sprite_new(const struct sprite_type *type,int rid,const void *cmd
  */
 
 struct sprite *sprite_new_res(int rid,uint8_t x,uint8_t y,uint32_t arg) {
-  const struct sprite_type *type=0;
-  const void *cmdv=0;
-  int cmdc=sprite_res_get(&type,&cmdv,rid);
-  if (cmdc<1) return 0;
-  return sprite_new(type,rid,cmdv,cmdc,x+0.5,y+0.5,arg);
+  const void *serial=0;
+  int serialc=rpg_res_get(&serial,EGG_TID_sprite,rid);
+  struct rom_sprite rspr;
+  if (rom_sprite_decode(&rspr,serial,serialc)<0) return 0;
+  const struct sprite_type *type=sprite_type_from_commands(rspr.cmdv,rspr.cmdc);
+  return sprite_new(type,rid,rspr.cmdv,rspr.cmdc,x+0.5,y+0.5,arg);
 }

@@ -29,8 +29,11 @@ int egg_client_init() {
   
   srand_auto();
   
-  if (maps_init(g.rom,g.romc)<0) return -1;
-  if (sprites_init(g.rom,g.romc)<0) return -1;
+  int err=rpg_res_init(g.rom,g.romc);
+  if (err<0) {
+    if (err!=-2) fprintf(stderr,"Unspecified error loading resources.\n");
+    return -2;
+  }
   
   if (!layer_spawn_hello()) return -1;
   

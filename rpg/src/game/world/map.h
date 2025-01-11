@@ -20,10 +20,10 @@ struct map {
   uint16_t songid;
 };
 
-int maps_init(const void *rom,int romc);
-
-struct map *map_by_rid(int rid);
-struct map *map_by_index(int p);
-int maps_count();
+/* (map) must be initially zero except (rid).
+ * (src,srcc) is an entire "map" resource.
+ * We initially set (physics) to an all-zeroes dummy.
+ */
+int map_init(struct map *map,const void *src,int srcc);
 
 #endif

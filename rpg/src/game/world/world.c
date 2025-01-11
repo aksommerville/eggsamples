@@ -84,7 +84,10 @@ int world_start(struct world *world) {
  */
 
 void world_suspend(struct world *world) {
-  //TODO
+  struct sprite *hero=world_get_hero(world);
+  if (hero) {
+    hero_motion(hero,0,0,0);
+  }
 }
 
 /* Resume.
@@ -92,13 +95,13 @@ void world_suspend(struct world *world) {
  */
  
 void world_resume(struct world *world,int state) {
-  //TODO
 }
 
 /* Input event.
  */
  
 void world_input(struct world *world,int btnid,int value,int state) {
+  //fprintf(stderr,"%s %04x=%d [%04x]\n",__func__,btnid,value,state);
   struct sprite *hero=world_get_hero(world);
   if (hero) {
     switch (btnid) {
@@ -141,7 +144,7 @@ void world_update(struct world *world,double elapsed) {
  */
  
 int world_load_map(struct world *world,int mapid) {
-  struct map *map=map_by_rid(mapid);
+  struct map *map=rpg_map_get(mapid);
   if (!map) {
     fprintf(stderr,"map:%d not found\n",mapid);
     return -1;

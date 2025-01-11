@@ -1,0 +1,4 @@
+fighter fighter:king (u16)1
+gold (u16)100
+xp (u16)50
+song song:battle

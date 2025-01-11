@@ -1,4 +1,4 @@
-type (u8:spritetype)dummy 0x00
+type (u16:spritetype)battle
 image image:sprites1
 tile 0x30 0
 solid

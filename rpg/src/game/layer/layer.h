@@ -54,7 +54,7 @@ struct layer *layer_spawn(int len); // => WEAK, installed on top
  */
 struct layer *layer_spawn_hello();
 struct layer *layer_spawn_world(const char *save,int savec);
-struct layer *layer_spawn_battle();
+struct layer *layer_spawn_battle(int battleid);
 struct layer *layer_spawn_cutscene();
 struct layer *layer_spawn_pause();
 
