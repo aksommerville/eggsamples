@@ -289,7 +289,7 @@ static void _hero_render(struct sprite *sprite,int16_t x,int16_t y) {
   /* In the boat, we use a different face.
    */
   if (SPRITE->boat) {
-    tileid=0x03;
+    tileid=0x13;
     xform=0;
     if (SPRITE->animframe&2) tileid+=0x10;
   }

@@ -141,3 +141,24 @@ void textbox_render(struct textbox *textbox) {
     graf_draw_tile(&g.graf,texcache_get_image(&g.texcache,RID_image_uitiles),dstx,dsty,tileid,0);
   }
 }
+
+/* Animated acknowledge-me or scroll-me carets.
+ */
+ 
+void textbox_render_ack(int16_t x,int16_t y,int16_t w,int16_t h) {
+  uint8_t tileid=0x12;
+  if (g.framec%50>=30) tileid++;
+  int16_t dstx=x+w-10;
+  int16_t dsty=y+h-1;
+  graf_draw_tile(&g.graf,texcache_get_image(&g.texcache,RID_image_uitiles),dstx,dsty,tileid,0);
+}
+
+void textbox_render_more(int16_t x,int16_t y,int16_t w,int16_t h,uint8_t mask) {
+  uint8_t tileid=0x12;
+  if (g.framec%50>=30) tileid++;
+  int texid=texcache_get_image(&g.texcache,RID_image_uitiles);
+  if (mask&DIR_N) graf_draw_tile(&g.graf,texid,x+(w>>1),y+1,tileid,EGG_XFORM_YREV);
+  if (mask&DIR_S) graf_draw_tile(&g.graf,texid,x+(w>>1),y+h-1,tileid,0);
+  if (mask&DIR_W) graf_draw_tile(&g.graf,texid,x+1,y+(h>>1),tileid,EGG_XFORM_SWAP|EGG_XFORM_YREV);
+  if (mask&DIR_E) graf_draw_tile(&g.graf,texid,x+w-1,y+(h>>1),tileid,EGG_XFORM_SWAP);
+}

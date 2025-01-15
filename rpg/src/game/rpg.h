@@ -4,6 +4,15 @@
 #define FBW 320
 #define FBH 180
 
+/* Size of the small animated view in battle.
+ * You must supply backgrounds at this size.
+ * The exact measurements of battle view are largely dependent on these.
+ * TOP_H pushes the fighter images down somewhat, if you have a horizon. Zero is fine to balance vertically.
+ */
+#define BATTLE_SCENE_W 128
+#define BATTLE_SCENE_H 80
+#define BATTLE_SCENE_TOP_H 20
+
 struct world; // game/world/world.h
 
 #include "egg/egg.h"
@@ -21,6 +30,7 @@ extern struct g {
   struct texcache texcache;
   struct font *font;
   int pvinput;
+  int framec; // Global render count, for cheap animations. Where it's worth being correct, use a private game-time clock.
   
   struct layer **layerv;
   int layerc,layera;

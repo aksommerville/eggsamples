@@ -1,21 +1,40 @@
-1 Chibi Eggman
-2 King Cat
-3 Battle begins!
-4 %0 foes draw near!
-5 %0 draws near!
-6 All combatants have perished.
-7 You have fallen in combat.
-8 Victory is yours!
-9 Battle ends.
-10 Earned %0 gold and %1 XP.
-11 TODO
-12 Attack
-13 Magic
-14 Item
-15 Defend
-16 Run
-17 %0 attacks.
-18 %0 casts %1.
-19 %0 uses %1.
-20 %0 tries to run away.
-21 Dealt %0 damage.
+1 %0's attack backfires for %1 damage!
+2 %0 does %1 damage to %2!
+3 %0 attacks %1 but no effect!
+4 %0 ran away.
+5 %0 tried to run but failed.
+6 %0 casts %1.
+7 %0 casts %1 upon %2.
+8 %0 uses %1.
+9 %0 uses %1 upon %2.
+10 King Cat
+11 Eggbert
+12 Both sides are annihilated!
+13 End of battle.
+14 Victory is yours!
+15 You have fallen.
+16 %0 failed to cast %1!
+17 %0 not able to use %1!
+
+#XXX old regime
+101 Chibi Eggman
+102 King Cat
+103 Battle begins!
+104 %0 foes draw near!
+105 %0 draws near!
+106 All combatants have perished.
+107 You have fallen in combat.
+108 Victory is yours!
+109 Battle ends.
+110 Earned %0 gold and %1 XP.
+111 TODO
+112 Attack
+113 Magic
+114 Item
+115 Defend
+116 Run
+117 %0 attacks.
+118 %0 casts %1.
+119 %0 uses %1.
+120 %0 tries to run away.
+121 Dealt %0 damage.

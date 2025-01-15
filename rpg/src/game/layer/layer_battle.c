@@ -25,17 +25,17 @@ static void _battle_del(struct layer *layer) {
 static void _battle_input(struct layer *layer,int btnid,int value,int state) {
   if (!LAYER->battle) { layer->defunct=1; return; }
   if (btnid==EGG_BTN_FOCUS) {
-    if (value) battle_resume(LAYER->battle,state);
+    if (value) battle_resume(LAYER->battle,state,0);
     else battle_suspend(LAYER->battle);
   } else {
-    battle_input(LAYER->battle,btnid,value,state);
+    battle_input(LAYER->battle,1,btnid,value,state);
   }
 }
  
 static void _battle_update(struct layer *layer,double elapsed) {
   if (!LAYER->battle) { layer->defunct=1; return; }
   battle_update(LAYER->battle,elapsed);
-  if (LAYER->battle->finished) {
+  if (battle_is_finished(LAYER->battle)) {
     layer->defunct=1;
   }
 }
@@ -49,6 +49,7 @@ static void _battle_render(struct layer *layer) {
  */
  
 struct layer *layer_spawn_battle(int battleid) {
+  if (!g.world) return 0;
 
   struct layer *layer=layer_spawn(sizeof(struct layer_battle));
   if (!layer) return 0;
@@ -64,7 +65,7 @@ struct layer *layer_spawn_battle(int battleid) {
   
   if (
     !(LAYER->battle=battle_new())||
-    (battle_setup_res(LAYER->battle,battleid)<0)
+    (battle_setup_res(LAYER->battle,g.world,battleid)<0)
   ) { layer->defunct=1; return 0; }
   
   return layer;

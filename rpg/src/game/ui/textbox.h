@@ -84,8 +84,11 @@ void textbox_render(struct textbox *textbox);
 /* Backdrop and border for a textbox are available for others to use.
  * (x,y,w,h) are the outer bounds of the box, including a 2-pixel border.
  * Try not to touch the border.
+ * "ack" is a blinking caret at the lower right of the border.
  */
 void textbox_render_backdrop(int16_t x,int16_t y,int16_t w,int16_t h);
 void textbox_render_border(int16_t x,int16_t y,int16_t w,int16_t h);
+void textbox_render_ack(int16_t x,int16_t y,int16_t w,int16_t h);
+void textbox_render_more(int16_t x,int16_t y,int16_t w,int16_t h,uint8_t mask); // Scroll indicators. (DIR_N|DIR_S|DIR_W|DIR_E)
 
 #endif

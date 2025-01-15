@@ -8,6 +8,9 @@ And formal battles: Pick a move, and outcomes get calculated.
 
 If you want to make something along the lines of Dragon Warrior or Pokemon, this is the place to start.
 
+Shelved 2024-01-14: What we have works more or less, and could be fleshed out without too much effort.
+But I'm bored of it already, want to move along.
+
 ## TODO
 
 - [x] Global resource store. We already have multiple of them, it's getting silly.

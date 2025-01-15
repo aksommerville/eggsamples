@@ -35,11 +35,12 @@ Massively Local Multiplayer Tetris.
 ### rpg
 
 Skeleton for a formal RPG a la Dragon Warrior.
+Incomplete, but surely completable.
 
 ## TODO
 
 - Implement some well-known styles, building out specific framework as needed:
-- - [ ] Formal RPG
+- - [x] Formal RPG
 - - [ ] Adventure
 - - [ ] Platformer
 - - [ ] Rhythm
