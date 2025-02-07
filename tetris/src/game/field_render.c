@@ -193,7 +193,7 @@ void field_render_combined_score(struct field *l,struct field *r,int16_t dstx,in
       font_render_string(rgba,dstw,dsth,dstw<<2,dstw-sw,boty,g.font,tmp,tmpc,0xffffffff);
     }
     if (!l->score_texid) l->score_texid=egg_texture_new();
-    egg_texture_load_raw(l->score_texid,EGG_TEX_FMT_RGBA,dstw,dsth,dstw<<2,rgba,dstw*dsth*4);
+    egg_texture_load_raw(l->score_texid,dstw,dsth,dstw<<2,rgba,dstw*dsth*4);
     l->score_w=dstw;
     l->score_h=dsth;
     free(rgba);

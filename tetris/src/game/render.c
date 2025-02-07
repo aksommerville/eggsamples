@@ -145,7 +145,7 @@ static void render_acquire_hiscores() {
   char *rgba=calloc(r.hiscores.w*r.hiscores.h,4);
   if (!rgba) return;
   render_generate_hiscores_rgba(rgba,r.hiscores.w,r.hiscores.h);
-  if (egg_texture_load_raw(r.hstexid,EGG_TEX_FMT_RGBA,r.hiscores.w,r.hiscores.h,r.hiscores.w<<2,rgba,r.hiscores.w*r.hiscores.h*4)>=0) {
+  if (egg_texture_load_raw(r.hstexid,r.hiscores.w,r.hiscores.h,r.hiscores.w<<2,rgba,r.hiscores.w*r.hiscores.h*4)>=0) {
     r.hsw=r.hiscores.w;
     r.hsh=r.hiscores.h;
   }
