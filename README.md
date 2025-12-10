@@ -39,11 +39,17 @@ These are the first things that I'm migrating from Egg v1 to Egg v2.
 So really not sure yet exactly what the migration entails.
 
 - Makefile are substantially different. Copy from any v2 boilerplate project. In v2 we normally keep the stock the Makefile.
+- shared_symbols.h: `#define EGGDEV_importUtil "res,font,graf,stdlib"`
 - "egg_rom_toc.h" => "egg_res_toc.h". duh oops.
+- "include opt..." => "include util..." as needed.
 - `egg_play_song(rid,force,repeat)` => `egg_play_song(songid,rid,repeat,trim,pan)`. Add a global client-side wrapper to avoid restarting.
 - `egg_play_sound(rid)` => `egg_play_sound(rid,trim,pan)`.
+- strings: We don't have an equivalent in v2; implement per game if needed.
+- font: Changes all around.
 - `egg_texture_get_status(&w,&h,texid)` => `egg_texture_get_size(&w,&h,texid)`.
 - All Egg render calls: New vertex types, and a struct of uniforms.
+- `graf_draw_tile_buffer`: No equivalent in the new graf; call for each tile individually.
+- Eliminate `texcache`; in v2, `graf` does that job.
 - Add `egg_client_notify(int,int)`.
 - Revoice songs and sound effects.
 
@@ -52,7 +58,7 @@ So really not sure yet exactly what the migration entails.
 - Migrate the existing v1 eggsamples to v2, in place.
 - [x] hello_world. ELIMINATED. What was this even for?
 - [x] snake
-- [ ] eggsweeper
+- [x] eggsweeper
 - [ ] rpg
 - [ ] tetris
 - [ ] Then update docs and such.

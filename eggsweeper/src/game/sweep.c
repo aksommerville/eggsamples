@@ -109,7 +109,7 @@ void sweep_reset() {
   g.suspend=0;
   g.victory=0;
   g.autoplay_clock=0.0;
-  egg_play_song(RID_song_around_here_somewhere,0,1);
+  sweep_song(RID_song_around_here_somewhere);
 }
 
 /* Lose game: Reveal all of the false flags and missed eggs, and set g.running false.
@@ -126,7 +126,7 @@ void sweep_lose() {
       case TILE_FLAG_EMPTY: *v=TILE_FALSE_FLAG; break;
     }
   }
-  egg_play_song(RID_song_eternal_torment,0,1);
+  sweep_song(RID_song_eternal_torment);
 }
 
 /* Review map, after a flag change.
@@ -143,10 +143,10 @@ static void sweep_check_victory() {
         return;
     }
   }
-  egg_play_sound(RID_sound_win);
+  sweep_sound(RID_sound_win);
   g.running=0;
   g.victory=1;
-  egg_play_song(RID_song_hold_your_fire,0,1);
+  sweep_song(RID_song_hold_your_fire);
 }
 
 /* How many eggs adjacent to this cell? 0..8, no errors
@@ -214,8 +214,8 @@ void sweep_move(int dx,int dy) {
     ok=0;
     g.sely=ROWC-1;
   }
-  if (ok) egg_play_sound(RID_sound_move);
-  else egg_play_sound(RID_sound_reject);
+  if (ok) sweep_sound(RID_sound_move);
+  else sweep_sound(RID_sound_reject);
 }
 
 /* Expose tile.
@@ -223,20 +223,20 @@ void sweep_move(int dx,int dy) {
  
 void sweep_expose() {
   switch (g.map[g.sely*COLC+g.selx]) {
-    case TILE_HIDDEN_EMPTY: egg_play_sound(RID_sound_expose); sweep_expose_empty_tile(g.map,g.selx,g.sely); break;
+    case TILE_HIDDEN_EMPTY: sweep_sound(RID_sound_expose); sweep_expose_empty_tile(g.map,g.selx,g.sely); break;
     case TILE_HIDDEN_EGG: {
         int solution=autosolve(g.map);
         if (solution==COLC*ROWC) {
           if (autosolve_repair(g.selx,g.sely)>=0) {
-            egg_play_sound(RID_sound_expose);
+            sweep_sound(RID_sound_expose);
             sweep_expose_empty_tile(g.map,g.selx,g.sely);
             return;
           }
         }
-        egg_play_sound(RID_sound_eggsplode);
+        sweep_sound(RID_sound_eggsplode);
         sweep_lose();
       } break;
-    default: egg_play_sound(RID_sound_reject);
+    default: sweep_sound(RID_sound_reject);
   }
 }
 
@@ -246,10 +246,10 @@ void sweep_expose() {
 void sweep_flag() {
   int p=g.sely*COLC+g.selx;
   switch (g.map[p]) {
-    case TILE_HIDDEN_EMPTY: egg_play_sound(RID_sound_flag); g.map[p]=TILE_FLAG_EMPTY; g.flagc++; break;
-    case TILE_HIDDEN_EGG: egg_play_sound(RID_sound_flag); g.map[p]=TILE_FLAG_EGG; g.flagc++; sweep_check_victory(); break;
-    case TILE_FLAG_EMPTY: egg_play_sound(RID_sound_unflag); g.map[p]=TILE_HIDDEN_EMPTY; g.flagc--; sweep_check_victory(); break;
-    case TILE_FLAG_EGG: egg_play_sound(RID_sound_unflag); g.map[p]=TILE_HIDDEN_EGG; g.flagc--; break;
-    default: egg_play_sound(RID_sound_reject);
+    case TILE_HIDDEN_EMPTY: sweep_sound(RID_sound_flag); g.map[p]=TILE_FLAG_EMPTY; g.flagc++; break;
+    case TILE_HIDDEN_EGG: sweep_sound(RID_sound_flag); g.map[p]=TILE_FLAG_EGG; g.flagc++; sweep_check_victory(); break;
+    case TILE_FLAG_EMPTY: sweep_sound(RID_sound_unflag); g.map[p]=TILE_HIDDEN_EMPTY; g.flagc--; sweep_check_victory(); break;
+    case TILE_FLAG_EGG: sweep_sound(RID_sound_unflag); g.map[p]=TILE_HIDDEN_EGG; g.flagc--; break;
+    default: sweep_sound(RID_sound_reject);
   }
 }

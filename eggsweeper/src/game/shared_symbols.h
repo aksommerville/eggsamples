@@ -5,6 +5,8 @@
 #ifndef SHARED_SYMBOLS_H
 #define SHARED_SYMBOLS_H
 
+#define EGGDEV_importUtil "font,res,stdlib,graf"
+
 #define NS_sys_tilesize 16
 
 #endif

@@ -1,22 +1,21 @@
 all:
 .SILENT:
-.SECONDARY:
-PRECMD=echo "  $@" ; mkdir -p "$(@D)" ;
 
-ifneq (,$(strip $(filter clean,$(MAKECMDGOALS))))
+ifeq (,$(EGG2_SDK))
+  EGG2_SDK:=../../egg2
+endif
+EGGDEV:=$(EGG2_SDK)/out/eggdev
+
+all:;$(EGGDEV) build
 clean:;rm -rf mid out
-else
-
-OPT_ENABLE:=stdlib graf text rom
-PROJNAME:=eggsweeper
-PROJRDNS:=com.aksommerville.egggame.eggsweeper
-ENABLE_SERVER_AUDIO:=
-BUILDABLE_DATA_TYPES:=
-
-ifndef EGG_SDK
-  EGG_SDK:=/home/andy/proj/egg
-endif
-
-include $(EGG_SDK)/etc/tool/common.mk
-
-endif
+run:;$(EGGDEV) run
+web-run:all;$(EGGDEV) serve --htdocs=out/eggsweeper-web.zip --project=.
+edit:;$(EGGDEV) serve \
+  --htdocs=/data:src/data \
+  --htdocs=EGG_SDK/src/web \
+  --htdocs=EGG_SDK/src/editor \
+  --htdocs=src/editor \
+  --htdocs=/synth.wasm:EGG_SDK/out/web/synth.wasm \n  --htdocs=/build:out/eggsweeper-web.zip \
+  --htdocs=/out:out \
+  --writeable=src/data \
+  --project=.

@@ -5,22 +5,24 @@ struct g g={0};
 void egg_client_quit(int status) {
 }
 
+void egg_client_notify(int k,int v) {
+}
+
 int egg_client_init() {
   
   int fbw=0,fbh=0;
-  egg_texture_get_status(&fbw,&fbh,1);
+  egg_texture_get_size(&fbw,&fbh,1);
   if ((fbw!=FBW)||(fbh!=FBH)) {
     fprintf(stderr,"Got %dx%d framebuffer (ie metadata) but expected %dx%d (ie sweep.h)\n",fbw,fbh,FBW,FBH);
     return -1;
   }
   
-  if ((g.romc=egg_get_rom(0,0))<=0) return -1;
+  if ((g.romc=egg_rom_get(0,0))<=0) return -1;
   if (!(g.rom=malloc(g.romc))) return -1;
-  if (egg_get_rom(g.rom,g.romc)!=g.romc) return -1;
-  strings_set_rom(g.rom,g.romc);
+  if (egg_rom_get(g.rom,g.romc)!=g.romc) return -1;
   
   if (!(g.font=font_new())) return -1;
-  if (font_add_image_resource(g.font,0x0020,RID_image_font9_0020)<0) return -1;
+  if (font_add_image(g.font,RID_image_font9_0020,0x0020)<0) return -1;
   
   srand_auto();
   
@@ -112,12 +114,12 @@ void egg_client_update(double elapsed) {
 
 void egg_client_render() {
   const int status_bar_height=8;
-  int texid=texcache_get_image(&g.texcache,RID_image_tiles);
   graf_reset(&g.graf);
   
   /* Status bar: A row of eggs or flags at the top, telling you how much outstanding.
    */
-  graf_draw_rect(&g.graf,0,0,FBW,status_bar_height,0x000000ff);
+  graf_fill_rect(&g.graf,0,0,FBW,status_bar_height,0x000000ff);
+  graf_set_image(&g.graf,RID_image_tiles);
   uint8_t tileid=0x10;
   int iconc=EGGC-g.flagc;
   if (iconc<0) {
@@ -126,12 +128,25 @@ void egg_client_render() {
   }
   int16_t dstx=4,dsty=status_bar_height>>1;
   for (;iconc-->0;dstx+=8) {
-    graf_draw_tile(&g.graf,texid,dstx,dsty,tileid,0);
+    graf_tile(&g.graf,dstx,dsty,tileid,0);
   }
   
   /* The main event.
    */
-  graf_draw_tile_buffer(&g.graf,texid,NS_sys_tilesize>>1,status_bar_height+(NS_sys_tilesize>>1),g.map,COLC,ROWC,COLC);
+  //graf_draw_tile_buffer(&g.graf,texid,NS_sys_tilesize>>1,status_bar_height+(NS_sys_tilesize>>1),g.map,COLC,ROWC,COLC);
+  {
+    int dsty=status_bar_height+(NS_sys_tilesize>>1);
+    const uint8_t *srcrow=g.map;
+    int yi=ROWC;
+    for (;yi-->0;srcrow+=COLC,dsty+=NS_sys_tilesize) {
+      int dstx=NS_sys_tilesize>>1;
+      const uint8_t *srcp=srcrow;
+      int xi=COLC;
+      for (;xi-->0;srcp++,dstx+=NS_sys_tilesize) {
+        graf_tile(&g.graf,dstx,dsty,*srcp,0);
+      }
+    }
+  }
   
   /* Animated cursor.
    */
@@ -143,7 +158,7 @@ void egg_client_render() {
       case 2: cursorxform=EGG_XFORM_XREV|EGG_XFORM_YREV; break;
       case 3: cursorxform=EGG_XFORM_YREV|EGG_XFORM_SWAP; break;
     }
-    graf_draw_tile(&g.graf,texid,g.selx*NS_sys_tilesize+(NS_sys_tilesize>>1),status_bar_height+g.sely*NS_sys_tilesize+(NS_sys_tilesize>>1),TILE_CURSOR,cursorxform);
+    graf_tile(&g.graf,g.selx*NS_sys_tilesize+(NS_sys_tilesize>>1),status_bar_height+g.sely*NS_sys_tilesize+(NS_sys_tilesize>>1),TILE_CURSOR,cursorxform);
   }
   
   /* Final message.
@@ -163,8 +178,21 @@ void egg_client_render() {
     }
     int16_t dstx=(FBW>>1)-(srcw>>1);
     int16_t dsty=(FBH>>1)-(srch>>1);
-    graf_draw_decal(&g.graf,texid,dstx,dsty,srcx,srcy,srcw,srch,0);
+    graf_decal(&g.graf,dstx,dsty,srcx,srcy,srcw,srch);
   }
   
   graf_flush(&g.graf);
+}
+
+/* Audio.
+ */
+ 
+void sweep_song(int rid) {
+  if (rid==g.song_playing) return;
+  g.song_playing=rid;
+  egg_play_song(1,rid,1,0.5f,0.0f);
+}
+
+void sweep_sound(int rid) {
+  egg_play_sound(rid,1.0f,0.0f);
 }

@@ -2,10 +2,10 @@
 #define SWEEP_H
 
 #include "egg/egg.h"
-#include "opt/stdlib/egg-stdlib.h"
-#include "opt/graf/graf.h"
-#include "opt/text/text.h"
-#include "egg_rom_toc.h"
+#include "util/stdlib/egg-stdlib.h"
+#include "util/graf/graf.h"
+#include "util/font/font.h"
+#include "egg_res_toc.h"
 #include "shared_symbols.h"
 
 /* >0 to let the CPU play; it's the interval between plays.
@@ -47,7 +47,6 @@ extern struct g {
   void *rom;
   int romc;
   struct graf graf;
-  struct texcache texcache;
   struct font *font;
   int pvinput;
   uint8_t map[COLC*ROWC];
@@ -59,6 +58,7 @@ extern struct g {
   int victory;
   int flagc;
   double autoplay_clock; // Counts up.
+  int song_playing;
 } g;
 
 // sweep.c
@@ -87,5 +87,8 @@ int autosolve(const uint8_t *map);
  * <0 if we can't.
  */
 int autosolve_repair(int x,int y);
+
+void sweep_song(int rid);
+void sweep_sound(int rid);
 
 #endif
