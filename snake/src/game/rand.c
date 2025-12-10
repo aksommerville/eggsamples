@@ -3,7 +3,7 @@
  * Same implementation as in egg-stdlib.
  */
 
-double egg_time_real();
+#include "egg/egg.h"
 
 static struct {
   unsigned int state;

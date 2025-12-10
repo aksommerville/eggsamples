@@ -2,6 +2,8 @@ all:
 .SILENT:
 .SECONDARY:
 
+export EGG_SDK:=../egg2
+
 # Everything in this directory that is *not* a project we can make:
 NOT_PROJECTS:=Makefile README.md playable genindex.js
 

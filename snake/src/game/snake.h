@@ -2,7 +2,7 @@
 #define SNAKE_H
 
 #include "egg/egg.h"
-#include "egg_rom_toc.h"
+#include "egg_res_toc.h"
 #include "shared_symbols.h"
 
 // Must agree with metadata. We validate at init.
@@ -46,6 +46,8 @@ extern struct g {
   double tick_dur; // Snake moves every so many seconds.
   int running;
   double clock; // Total runtime, resets with game.
+  
+  int song_playing;
 } g;
 
 // rand.c
@@ -57,5 +59,6 @@ void snake_init();
 void snake_reset();
 void snake_move(int dx,int dy); // For immediate moves. Not necessary for scheduled moves.
 void snake_update(double elapsed);
+void snake_song(int rid);
 
 #endif

@@ -58,7 +58,7 @@ void snake_reset() {
   g.running=1;
   g.clock=0.0;
   
-  egg_play_song(RID_song_snake_shakin,0,1);
+  snake_song(RID_song_snake_shakin);
 }
 
 /* Enter initial state.
@@ -70,7 +70,7 @@ void snake_init() {
   g.snegmentc=0;
   g.snakx=g.snaky=0xff;
   g.clock=0.0;
-  egg_play_song(RID_song_lounge_lizard,0,1);
+  snake_song(RID_song_lounge_lizard);
 }
 
 /* End game.
@@ -78,7 +78,7 @@ void snake_init() {
  
 static void snake_finish(int victory,const char *reason) {
   g.running=0;
-  egg_play_song(RID_song_lounge_lizard,0,1);
+  snake_song(RID_song_lounge_lizard);
   if (victory) {
   } else if (reason) {
     //egg_log(reason);
@@ -150,7 +150,7 @@ static void snake_advance(int dx,int dy) {
   switch (snake_examine_position(nx,ny)) {
     case POS_OOB: snake_finish(0,"OOB"); return;
     case POS_SNAKE: snake_finish(0,"COLLISION"); return;
-    case POS_SNACK: snacked=1; egg_play_sound(RID_sound_snack); // pass
+    case POS_SNACK: snacked=1; egg_play_sound(RID_sound_snack,1.0f,0.0f); // pass
     case POS_OPEN: {
         head->x=nx;
         head->y=ny;
@@ -291,4 +291,13 @@ void snake_update(double elapsed) {
     g.motion_clock-=g.tick_dur;
     snake_advance(0,0);
   }
+}
+
+/* Play song.
+ */
+ 
+void snake_song(int rid) {
+  if (rid==g.song_playing) return;
+  g.song_playing=rid;
+  egg_play_song(1,rid,1,0.5f,0.0f);
 }

@@ -7,7 +7,7 @@ void egg_client_quit(int status) {
 
 int egg_client_init() {
   int fbw=0,fbh=0;
-  egg_texture_get_status(&fbw,&fbh,1);
+  egg_texture_get_size(&fbw,&fbh,1);
   if ((fbw!=FBW)||(fbh!=FBH)) return -1;
   if (egg_texture_load_image(g.texid=egg_texture_new(),RID_image_tiles)<0) return -1;
   srand_auto();
@@ -42,7 +42,13 @@ void egg_client_update(double elapsed) {
 static void draw_string(int16_t dstx,int16_t dsty,const char *src,int srcc) {
   if (!src) return;
   if (srcc<0) { srcc=0; while (src[srcc]) srcc++; }
-  struct egg_draw_tile vtxv[32];
+  struct egg_render_tile vtxv[32];
+  struct egg_render_uniform un={
+    .dsttexid=1,
+    .srctexid=g.texid,
+    .mode=EGG_RENDER_TILE,
+    .alpha=0xff,
+  };
   int vtxc=0;
   for (;srcc-->0;src++,dstx+=NS_sys_tilesize) {
     // We only do rows 2..5 of ASCII. (6 and 7 are mostly lowercase roman, render the letters uppercase).
@@ -50,18 +56,18 @@ static void draw_string(int16_t dstx,int16_t dsty,const char *src,int srcc) {
     if ((ch>='a')&&(ch<='z')) ch-=0x20;
     if ((ch<=0x20)||(ch>0x5f)) continue;
     if (vtxc>=sizeof(vtxv)/sizeof(vtxv[0])) {
-      egg_draw_tile(1,g.texid,vtxv,vtxc);
+      egg_render(&un,vtxv,sizeof(vtxv));
       vtxc=0;
     }
-    vtxv[vtxc++]=(struct egg_draw_tile){
-      .dstx=dstx,
-      .dsty=dsty,
+    vtxv[vtxc++]=(struct egg_render_tile){
+      .x=dstx,
+      .y=dsty,
       .tileid=ch,
       .xform=0,
     };
   }
   if (vtxc) {
-    egg_draw_tile(1,g.texid,vtxv,vtxc);
+    egg_render(&un,vtxv,vtxc*sizeof(struct egg_render_tile));
   }
 }
 
@@ -84,47 +90,81 @@ static void draw_int(int16_t dstx,int16_t dsty,int v) {
 
 // Draw the constant background, a grid of tile zero. (dstx,dsty) is the center of the top-left cell.
 static void draw_background(int16_t dstx,int16_t dsty) {
-  struct egg_draw_tile vtxv[COLC*ROWC];
-  struct egg_draw_tile *vtx=vtxv;
+  struct egg_render_tile vtxv[COLC*ROWC];
+  struct egg_render_tile *vtx=vtxv;
   int16_t dstx0=dstx;
   int yi=ROWC; for (;yi-->0;dsty+=NS_sys_tilesize) {
     int xi=COLC,dstx=dstx0; for (;xi-->0;dstx+=NS_sys_tilesize,vtx++) {
-      vtx->dstx=dstx;
-      vtx->dsty=dsty;
+      vtx->x=dstx;
+      vtx->y=dsty;
       vtx->tileid=0;
       vtx->xform=0;
     }
   }
-  egg_draw_tile(1,g.texid,vtxv,COLC*ROWC);
+  struct egg_render_uniform un={
+    .dsttexid=1,
+    .srctexid=g.texid,
+    .mode=EGG_RENDER_TILE,
+    .alpha=0xff,
+  };
+  egg_render(&un,vtxv,sizeof(vtxv));
 }
 
 static void draw_snake(int16_t dstx,int16_t dsty) {
-  struct egg_draw_tile vtxv[COLC*ROWC];
-  struct egg_draw_tile *vtx=vtxv;
+  struct egg_render_tile vtxv[COLC*ROWC];
+  struct egg_render_tile *vtx=vtxv;
   const struct snegment *snegment=g.snegmentv;
   int i=g.snegmentc;
   for (;i-->0;vtx++,snegment++) {
-    vtx->dstx=dstx+snegment->x*NS_sys_tilesize;
-    vtx->dsty=dsty+snegment->y*NS_sys_tilesize;
+    vtx->x=dstx+snegment->x*NS_sys_tilesize;
+    vtx->y=dsty+snegment->y*NS_sys_tilesize;
     vtx->tileid=snegment->tileid;
     vtx->xform=snegment->xform;
   }
-  egg_draw_tile(1,g.texid,vtxv,g.snegmentc);
+  struct egg_render_uniform un={
+    .dsttexid=1,
+    .srctexid=g.texid,
+    .mode=EGG_RENDER_TILE,
+    .alpha=0xff,
+  };
+  egg_render(&un,vtxv,g.snegmentc*sizeof(struct egg_render_tile));
 }
 
 static void draw_snak(int16_t dstx,int16_t dsty) {
   if ((g.snakx>=COLC)||(g.snaky>=ROWC)) return;
-  struct egg_draw_tile vtx={
-    .dstx=dstx+g.snakx*NS_sys_tilesize,
-    .dsty=dsty+g.snaky*NS_sys_tilesize,
+  struct egg_render_tile vtx={
+    .x=dstx+g.snakx*NS_sys_tilesize,
+    .y=dsty+g.snaky*NS_sys_tilesize,
     .tileid=TILE_SNAK,
     .xform=0,
   };
-  egg_draw_tile(1,g.texid,&vtx,1);
+  struct egg_render_uniform un={
+    .dsttexid=1,
+    .srctexid=g.texid,
+    .mode=EGG_RENDER_TILE,
+    .alpha=0xff,
+  };
+  egg_render(&un,&vtx,sizeof(vtx));
+}
+
+static void fill_rect(int x,int y,int w,int h,uint32_t rgba) {
+  uint8_t r=rgba>>24,g=rgba>>16,b=rgba>>8,a=rgba;
+  struct egg_render_raw vtxv[]={
+    {x,y,0,0,r,g,b,a},
+    {x,y+h,0,0,r,g,b,a},
+    {x+w,y,0,0,r,g,b,a},
+    {x+w,y+h,0,0,r,g,b,a},
+  };
+  struct egg_render_uniform un={
+    .dsttexid=1,
+    .mode=EGG_RENDER_TRIANGLE_STRIP,
+    .alpha=0xff,
+  };
+  egg_render(&un,vtxv,sizeof(vtxv));
 }
 
 void egg_client_render() {
-  egg_draw_clear(1,0x102030ff);
+  fill_rect(0,0,FBW,FBH,0x102030ff);
   
   /* Game. Draw even when not running.
    */
@@ -152,8 +192,7 @@ void egg_client_render() {
   /* Hello and Game Over details.
    */
   if (!g.running) {
-    struct egg_draw_rect rect={fldx,fldy,fldw,fldh,0x00,0x00,0x00,0xa0};
-    egg_draw_rect(1,&rect,1);
+    fill_rect(fldx,fldy,fldw,fldh,0x000000a0);
     if (g.snegmentc) { // Game Over.
     } else { // Hello.
       int16_t srcx=0;
@@ -162,17 +201,29 @@ void egg_client_render() {
       int16_t srch=NS_sys_tilesize*3;
       int16_t dstx=(FBW>>1)-(srcw>>1);
       int16_t dsty=fldy+(fldh>>1)-(srch>>1);
-      struct egg_draw_decal decal={dstx,dsty,srcx,srcy,srcw,srch};
-      egg_draw_decal(1,g.texid,&decal,1);
+      struct egg_render_raw vtxv[]={
+        {dstx,dsty,srcx,srcy},
+        {dstx,dsty+srch,srcx,srcy+srch},
+        {dstx+srcw,dsty,srcx+srcw,srcy},
+        {dstx+srcw,dsty+srch,srcx+srcw,srcy+srch},
+      };
+      struct egg_render_uniform un={
+        .dsttexid=1,
+        .srctexid=g.texid,
+        .alpha=0xff,
+      };
+      egg_render(&un,vtxv,sizeof(vtxv));
     }
   }
 }
 
+void egg_client_notify(int k,int v) {}
+
 /* We're building without libc, but I guess clang inserts calls to memset somewhere, and then doesn't insert an implementation.
  */
-#if !USE_REAL_STDLIB
+#if !USE_real_stdlib
 typedef int size_t;
-void *memset(void *v,int ch,size_t c) {
+void *memset(void *v,int ch,long unsigned int c) {
   uint8_t *V=v;
   for (;c-->0;V++) *V=ch;
   return v;
