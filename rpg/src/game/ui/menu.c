@@ -91,10 +91,10 @@ void menu_update(struct menu *menu,double elapsed) {
  
 static void menu_render_outline(struct menu *menu,int x,int y,int w,int h,int linew,uint32_t rgba) {
   int pad=1;
-  graf_draw_rect(&g.graf,x-linew-pad,y-linew-pad,w+(linew<<1)+(pad<<1),linew,rgba);
-  graf_draw_rect(&g.graf,x-linew-pad,y-linew-pad,linew,h+(linew<<1)+(pad<<1),rgba);
-  graf_draw_rect(&g.graf,x+w+pad,y-linew-pad,linew,h+(linew<<1)+(pad<<1),rgba);
-  graf_draw_rect(&g.graf,x-linew-pad,y+h+pad,w+(linew<<1)+(pad<<1),linew,rgba);
+  graf_fill_rect(&g.graf,x-linew-pad,y-linew-pad,w+(linew<<1)+(pad<<1),linew,rgba);
+  graf_fill_rect(&g.graf,x-linew-pad,y-linew-pad,linew,h+(linew<<1)+(pad<<1),rgba);
+  graf_fill_rect(&g.graf,x+w+pad,y-linew-pad,linew,h+(linew<<1)+(pad<<1),rgba);
+  graf_fill_rect(&g.graf,x-linew-pad,y+h+pad,w+(linew<<1)+(pad<<1),linew,rgba);
 }
 
 /* Render focus.
@@ -106,7 +106,8 @@ static void menu_render_focus_animated(struct menu *menu,struct button *a,struct
   } else if (a==b) {
     //menu_render_outline(menu,b->x,b->y,b->w,b->h,1,0xffff00ff);
     //graf_draw_rect(&g.graf,b->x,b->y,b->w,b->h,0x30507080);
-    graf_draw_tile(&g.graf,texcache_get_image(&g.texcache,RID_image_uitiles),b->x-(NS_sys_tilesize>>1)-4,b->y+(b->h>>1),0x01,0);
+    graf_set_image(&g.graf,RID_image_uitiles);
+    graf_tile(&g.graf,b->x-(NS_sys_tilesize>>1)-4,b->y+(b->h>>1),0x01,0);
   } else {
     double T=1.0-t;
     int x=(int)(a->x*T+b->x*t);
@@ -115,7 +116,8 @@ static void menu_render_focus_animated(struct menu *menu,struct button *a,struct
     int h=(int)(a->h*T+b->h*t);
     //menu_render_outline(menu,x,y,w,h,1,0xffff00ff);
     //graf_draw_rect(&g.graf,x,y,w,h,0x30507080);
-    graf_draw_tile(&g.graf,texcache_get_image(&g.texcache,RID_image_uitiles),x-(NS_sys_tilesize>>1)-4,y+(h>>1),0x01,0);
+    graf_set_image(&g.graf,RID_image_uitiles);
+    graf_tile(&g.graf,x-(NS_sys_tilesize>>1)-4,y+(h>>1),0x01,0);
   }
 }
  

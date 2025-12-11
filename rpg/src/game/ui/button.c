@@ -27,7 +27,7 @@ void button_render(struct button *button) {
   if ((button->w<1)||(button->h<1)) return;
   if (!button->enable) graf_set_alpha(&g.graf,0x80);
   switch (button->rendermode) {
-    case 'c': graf_draw_rect(&g.graf,button->x,button->y,button->w,button->h,button->rgba); break;
+    case 'c': graf_fill_rect(&g.graf,button->x,button->y,button->w,button->h,button->rgba); break;
     case 't': {
         int16_t dstx,dsty;
         if (button->xalign<0) dstx=button->x+(NS_sys_tilesize>>1);
@@ -36,7 +36,8 @@ void button_render(struct button *button) {
         if (button->yalign<0) dsty=button->y+(NS_sys_tilesize>>1);
         else if (button->yalign>0) dsty=button->y+button->h-(NS_sys_tilesize>>1);
         else dsty=button->y+(button->h>>1);
-        graf_draw_tile(&g.graf,texcache_get_image(&g.texcache,button->imageid),dstx,dsty,button->tileid,button->xform);
+        graf_set_image(&g.graf,button->imageid);
+        graf_tile(&g.graf,dstx,dsty,button->tileid,button->xform);
       } break;
     case 'd': {
         int16_t dstx,dsty;
@@ -46,8 +47,9 @@ void button_render(struct button *button) {
         if (button->yalign<0) dsty=button->y;
         else if (button->yalign>0) dsty=button->y+button->h-button->srch;
         else dsty=button->y+(button->h>>1)-(button->srch>>1);
-        int texid=button->texid?button->texid:texcache_get_image(&g.texcache,button->imageid);
-        graf_draw_decal(&g.graf,texid,dstx,dsty,button->srcx,button->srcy,button->srcw,button->srch,button->xform);
+        int texid=button->texid?button->texid:graf_tex(&g.graf,button->imageid);
+        graf_set_input(&g.graf,texid);
+        graf_decal(&g.graf,dstx,dsty,button->srcx,button->srcy,button->srcw,button->srch); //TODO ,button->xform); does it get used? v2 graf doesn't transform decals
       } break;
     case 'x': button->render_cb(button,button->render_userdata); break;
   }
@@ -101,14 +103,14 @@ void button_setup_decal(struct button *button,int imageid,int16_t srcx,int16_t s
  
 void button_setup_text(struct button *button,const char *src,int srcc,uint32_t rgba) {
   if (!button) return;
-  int texid=font_tex_oneline(g.font,src,srcc,FBW,rgba);
+  int texid=font_render_to_texture(0,g.font,src,srcc,FBW,font_get_line_height(g.font),rgba);
   if (texid<1) return;
   button->rendermode='d';
   button->imageid=0;
   button->texid=texid;
   button->srcx=0;
   button->srcy=0;
-  egg_texture_get_status(&button->w,&button->h,texid);
+  egg_texture_get_size(&button->w,&button->h,texid);
   button->srcw=button->w;
   button->srch=button->h;
   button->xform=0;
@@ -119,14 +121,16 @@ void button_setup_text(struct button *button,const char *src,int srcc,uint32_t r
  
 void button_setup_string(struct button *button,int rid,int index,uint32_t rgba) {
   if (!button) return;
-  int texid=font_texres_oneline(g.font,rid,index,FBW,rgba);
+  const char *src=0;
+  int srcc=strings_get(&src,rid,index);
+  int texid=font_render_to_texture(0,g.font,src,srcc,FBW,font_get_line_height(g.font),rgba);
   if (texid<1) return;
   button->rendermode='d';
   button->imageid=0;
   button->texid=texid;
   button->srcx=0;
   button->srcy=0;
-  egg_texture_get_status(&button->w,&button->h,texid);
+  egg_texture_get_size(&button->w,&button->h,texid);
   button->srcw=button->w;
   button->srch=button->h;
   button->xform=0;

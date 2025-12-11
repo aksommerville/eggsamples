@@ -4,15 +4,17 @@
 
 #include "rpg.h"
 #include "world/map.h"
-#include "opt/rom/rom.h"
 
 /* Globals.
  */
  
 static struct {
+
+  void *rom;
+  int romc;
   
   // All interesting resources, we record as stored.
-  struct rom_res *resv;
+  struct rom_entry *resv;
   int resc,resa;
   
   // Types that need a live object that remains immutable-ish, we can track those objects too.
@@ -33,6 +35,7 @@ static int rpg_res_should_keep_type(uint8_t tid) {
     case EGG_TID_sprite:
     case EGG_TID_battle:
     case EGG_TID_fighter:
+    case EGG_TID_strings:
       return 1;
   }
   return 0;
@@ -41,7 +44,7 @@ static int rpg_res_should_keep_type(uint8_t tid) {
 /* Map and tilesheet resources.
  */
  
-static int rpg_res_add_map(const struct rom_res *res) {
+static int rpg_res_add_map(const struct rom_entry *res) {
   if (gres.mapc>=gres.mapa) {
     int na=gres.mapa+32;
     if (na>INT_MAX/sizeof(struct map)) return -1;
@@ -80,7 +83,7 @@ struct map *rpg_map_get(int rid) {
   return 0;
 }
 
-static int rpg_res_link_tilesheet(const struct rom_res *res) {
+static int rpg_res_link_tilesheet(const struct rom_entry *res) {
   if (gres.tsc>=gres.tsa) {
     int na=gres.tsa+16;
     if (na>INT_MAX/sizeof(void*)) return -1;
@@ -93,10 +96,10 @@ static int rpg_res_link_tilesheet(const struct rom_res *res) {
   if (!dst) return -1;
   gres.tsv[gres.tsc++]=dst;
   
-  struct rom_tilesheet_reader reader;
-  if (rom_tilesheet_reader_init(&reader,res->v,res->c)<0) return -1;
-  struct rom_tilesheet_entry entry;
-  while (rom_tilesheet_reader_next(&entry,&reader)>0) {
+  struct tilesheet_reader reader;
+  if (tilesheet_reader_init(&reader,res->v,res->c)<0) return -1;
+  struct tilesheet_entry entry;
+  while (tilesheet_reader_next(&entry,&reader)>0) {
     if (entry.tableid==NS_tilesheet_physics) { // The only table we care about
       memcpy(dst+entry.tileid,entry.v,entry.c);
     }
@@ -115,29 +118,35 @@ static int rpg_res_link_tilesheet(const struct rom_res *res) {
 /* Initialize TOC.
  */
  
-int rpg_res_init(const void *rom,int romc) {
+int rpg_res_init() {
   int err,i;
   if (gres.resc) return -1;
+  
+  /* Acquire the full ROM.
+   */
+  if ((gres.romc=egg_rom_get(0,0))<=0) return -1;
+  if (!(gres.rom=malloc(gres.romc))) return -1;
+  if (egg_rom_get(gres.rom,gres.romc)!=gres.romc) return -1;
   
   /* Build up the raw TOC, and instantiate and store interesting objects.
    */
   struct rom_reader reader;
-  if (rom_reader_init(&reader,rom,romc)<0) return -1;
-  struct rom_res *res;
-  while (res=rom_reader_next(&reader)) {
-    if (!rpg_res_should_keep_type(res->tid)) continue;
+  if (rom_reader_init(&reader,gres.rom,gres.romc)<0) return -1;
+  struct rom_entry res;
+  while (rom_reader_next(&res,&reader)>0) {
+    if (!rpg_res_should_keep_type(res.tid)) continue;
     if (gres.resc>=gres.resa) {
       int na=gres.resa+64;
-      if (na>INT_MAX/sizeof(struct rom_res)) return -1;
-      void *nv=realloc(gres.resv,sizeof(struct rom_res)*na);
+      if (na>INT_MAX/sizeof(struct rom_entry)) return -1;
+      void *nv=realloc(gres.resv,sizeof(struct rom_entry)*na);
       if (!nv) return -1;
       gres.resv=nv;
       gres.resa=na;
     }
-    gres.resv[gres.resc++]=*res;
-    switch (res->tid) {
+    gres.resv[gres.resc++]=res;
+    switch (res.tid) {
     
-      case EGG_TID_map: if ((err=rpg_res_add_map(res))<0) return err; break;
+      case EGG_TID_map: if ((err=rpg_res_add_map(&res))<0) return err; break;
       // Add new object types here.
       
     }
@@ -147,10 +156,11 @@ int rpg_res_init(const void *rom,int romc) {
   /* There are some relationships where linkage makes more sense child-to-parent.
    * Pick those off here.
    */
-  for (res=gres.resv,i=gres.resc;i-->0;res++) {
-    switch (res->tid) {
+  struct rom_entry *rp=gres.resv;
+  for (i=gres.resc;i-->0;rp++) {
+    switch (rp->tid) {
     
-      case EGG_TID_tilesheet: if ((err=rpg_res_link_tilesheet(res))<0) return err; break;
+      case EGG_TID_tilesheet: if ((err=rpg_res_link_tilesheet(rp))<0) return err; break;
       // Add new child-to-parent linkages here.
       
     }
@@ -171,7 +181,7 @@ int rpg_res_get(void *dstpp,int tid,int rid) {
   int lo=0,hi=gres.resc;
   while (lo<hi) {
     int ck=(lo+hi)>>1;
-    const struct rom_res *res=gres.resv+ck;
+    const struct rom_entry *res=gres.resv+ck;
          if (tid<res->tid) hi=ck;
     else if (tid>res->tid) lo=ck+1;
     else if (rid<res->rid) hi=ck;
@@ -179,6 +189,28 @@ int rpg_res_get(void *dstpp,int tid,int rid) {
     else {
       *(const void**)dstpp=res->v;
       return res->c;
+    }
+  }
+  return 0;
+}
+
+/* Get string.
+ */
+ 
+int strings_get(void *dstpp,int rid,int strix) {
+  if (rid<1) return 0;
+  if (strix<1) return 0;
+  if (rid<0x40) rid|=egg_prefs_get(EGG_PREF_LANG)<<6;
+  const void *serial=0;
+  int serialc=rpg_res_get(&serial,EGG_TID_strings,rid);
+  struct strings_reader reader;
+  if (strings_reader_init(&reader,serial,serialc)<0) return 0;
+  struct strings_entry entry;
+  while (strings_reader_next(&entry,&reader)>0) {
+    if (entry.index>strix) return 0;
+    if (entry.index==strix) {
+      *(const void**)dstpp=entry.v;
+      return entry.c;
     }
   }
   return 0;

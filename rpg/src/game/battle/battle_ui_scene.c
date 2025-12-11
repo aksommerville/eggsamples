@@ -159,8 +159,8 @@ void scene_render(struct scene *scene) {
    * TODO Get these from whoever launched the battle. They depend on world, shouldn't be part of the battle resource.
    */
   int bgimageid=RID_image_battlebg,bgcol=0,bgrow=0;
-  int texid=texcache_get_image(&g.texcache,bgimageid);
-  graf_draw_decal(&g.graf,texid,scene->x,scene->y,bgcol*BATTLE_SCENE_W,bgrow*BATTLE_SCENE_H,BATTLE_SCENE_W,BATTLE_SCENE_H,0);
+  graf_set_image(&g.graf,bgimageid);
+  graf_decal(&g.graf,scene->x,scene->y,bgcol*BATTLE_SCENE_W,bgrow*BATTLE_SCENE_H,BATTLE_SCENE_W,BATTLE_SCENE_H);
   
   /* Sprites.
    */
@@ -170,11 +170,11 @@ void scene_render(struct scene *scene) {
   for (;i-->0;sprite++) {
     if (!sprite->imageid) continue;
     if (sprite->imageid!=imageid) {
-      texid=texcache_get_image(&g.texcache,imageid=sprite->imageid);
+      graf_set_image(&g.graf,imageid=sprite->imageid);
     }
     uint8_t tileid=sprite->tileid;
     if (sprite->fighter->hp<=0) tileid+=0x01;
-    graf_draw_tile(&g.graf,texid,sprite->x,sprite->y,tileid,sprite->xform);
+    graf_tile(&g.graf,sprite->x,sprite->y,tileid,sprite->xform);
     //TODO Other decorations, like swinging a sword...
   }
   

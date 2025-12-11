@@ -1,6 +1,5 @@
 #include "game/rpg.h"
 #include "map.h"
-#include "opt/rom/rom.h"
 
 /* Size limit is more or less arbitrary.
  * Technically it could go up to 0xffff.
@@ -15,8 +14,8 @@ static const uint8_t default_physics[256]={0};
  */
  
 int map_init(struct map *dst,const void *src,int srcc) {
-  struct rom_map rmap;
-  if (rom_map_decode(&rmap,src,srcc)<0) return -1;
+  struct map_res rmap;
+  if (map_res_decode(&rmap,src,srcc)<0) return -1;
   if ((rmap.w<1)||(rmap.h<1)||(rmap.w>MAP_SIZE_LIMIT)||(rmap.h>MAP_SIZE_LIMIT)) return -1;
   int len=rmap.w*rmap.h;
   if (!(dst->v=malloc(len))) return -1;
@@ -24,16 +23,16 @@ int map_init(struct map *dst,const void *src,int srcc) {
   dst->w=rmap.w;
   dst->h=rmap.h;
   dst->ov=rmap.v;
-  dst->cmdv=rmap.cmdv;
+  dst->cmdv=rmap.cmd;
   dst->cmdc=rmap.cmdc;
   dst->physics=default_physics;
-  struct rom_command_reader reader={.v=rmap.cmdv,.c=rmap.cmdc};
-  struct rom_command cmd;
-  while (rom_command_reader_next(&cmd,&reader)>0) {
+  struct cmdlist_reader reader={.v=rmap.cmd,.c=rmap.cmdc};
+  struct cmdlist_entry cmd;
+  while (cmdlist_reader_next(&cmd,&reader)>0) {
     switch (cmd.opcode) {
     
-      case CMD_map_image: dst->imageid=(cmd.argv[0]<<8)|cmd.argv[1]; break;
-      case CMD_map_song: dst->songid=(cmd.argv[0]<<8)|cmd.argv[1]; break;
+      case CMD_map_image: dst->imageid=(cmd.arg[0]<<8)|cmd.arg[1]; break;
+      case CMD_map_song: dst->songid=(cmd.arg[0]<<8)|cmd.arg[1]; break;
       // Pick off any other commands that we want to record special.
     }
   }

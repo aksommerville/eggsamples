@@ -69,7 +69,7 @@ void bmenu_set_bounds(struct bmenu *bmenu,int x,int y,int w,int h) {
 static void bmenu_move(struct bmenu *bmenu,int dx,int dy) {
   bmenu->chosen=0;
   if ((bmenu->colc<1)||(bmenu->rowc_total<1)) return;
-  egg_play_sound(RID_sound_ui_move);
+  rpg_sound(RID_sound_ui_move);
   int col=bmenu->selp%bmenu->colc+dx; if (col<0) col=bmenu->colc-1; else if (col>=bmenu->colc) col=0;
   int row=bmenu->selp/bmenu->colc+dy; if (row<0) row=bmenu->rowc_total-1; else if (row>=bmenu->rowc_total) row=0;
   bmenu->selp=row*bmenu->colc+col;
@@ -122,7 +122,7 @@ void bmenu_render(struct bmenu *bmenu) {
       int selcol=bmenu->selp%bmenu->colc;
       int selrow=bmenu->selp/bmenu->colc;
       if ((selcol>=0)&&(selcol<bmenu->colc)&&(selrow>=bmenu->yscroll)&&(selrow<bmenu->yscroll+bmenu->rowc)) {
-        graf_draw_rect(&g.graf,
+        graf_fill_rect(&g.graf,
           bmenu->x+BORDERW+selcol*bmenu->colw-1,
           bmenu->y+BORDERW+(selrow-bmenu->yscroll)*bmenu->rowh-1,
           bmenu->colw+1,
@@ -144,7 +144,8 @@ void bmenu_render(struct bmenu *bmenu) {
         int16_t cph=option->texh;
         if (dstx+cpw>bmenu->x+bmenu->w) cpw=bmenu->x+bmenu->w-dstx;
         if (dsty+cph>bmenu->y+bmenu->h) cph=bmenu->y+bmenu->h-dsty;
-        graf_draw_decal(&g.graf,option->texid,dstx,dsty,0,0,cpw,cph,0);
+        graf_set_input(&g.graf,option->texid);
+        graf_decal(&g.graf,dstx,dsty,0,0,cpw,cph);
       }
     }
   }
@@ -190,8 +191,8 @@ void bmenu_add_option(struct bmenu *bmenu,const char *text,int textc,int id) {
   struct bmenu_option *option=bmenu_optionv_add(bmenu);
   if (!option) return;
   option->id=id;
-  option->texid=font_tex_oneline(g.font,text,textc,bmenu->w,0xffffffff);
-  egg_texture_get_status(&option->texw,&option->texh,option->texid);
+  option->texid=font_render_to_texture(0,g.font,text,textc,bmenu->w,font_get_line_height(g.font),0xffffffff);
+  egg_texture_get_size(&option->texw,&option->texh,option->texid);
 }
 
 /* Pack options.

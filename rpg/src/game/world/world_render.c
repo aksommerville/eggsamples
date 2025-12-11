@@ -53,12 +53,9 @@ static void world_render_map(struct world *world) {
   /* For small maps, draw a blotter first.
    */
   if ((world->camw<FBW)||(world->camh<FBH)) {
-    graf_draw_rect(&g.graf,0,0,FBW,FBH,0x000000ff);
+    graf_fill_rect(&g.graf,0,0,FBW,FBH,0x000000ff);
   }
   
-  /* graf has a convenience that does exactly what we need for the map.
-   * We just need to do some dumb math for the projection.
-   */
   int srccol=world->camx/NS_sys_tilesize;
   int srcrow=world->camy/NS_sys_tilesize;
   int colc=(world->camx+world->camw-1)/NS_sys_tilesize-srccol+1;
@@ -67,15 +64,19 @@ static void world_render_map(struct world *world) {
   if (srcrow<0) { rowc+=srcrow; srcrow=0; }
   if (srccol+colc>world->map->w) colc=world->map->w-srccol;
   if (srcrow+rowc>world->map->h) rowc=world->map->h-srcrow;
-  int dstx=(NS_sys_tilesize>>1)+srccol*NS_sys_tilesize-world->camx;
+  int dstx0=(NS_sys_tilesize>>1)+srccol*NS_sys_tilesize-world->camx;
   int dsty=(NS_sys_tilesize>>1)+srcrow*NS_sys_tilesize-world->camy;
-  graf_draw_tile_buffer(
-    &g.graf,
-    texcache_get_image(&g.texcache,world->map->imageid),
-    dstx,dsty,
-    world->map->v+srcrow*world->map->w+srccol,
-    colc,rowc,world->map->w
-  );
+  graf_set_image(&g.graf,world->map->imageid);
+  const uint8_t *prow=world->map->v+srcrow*world->map->w+srccol;
+  int yi=rowc;
+  for (;yi-->0;prow+=world->map->w,dsty+=NS_sys_tilesize) {
+    const uint8_t *pcol=prow;
+    int xi=colc;
+    int dstx=dstx0;
+    for (;xi-->0;pcol++,dstx+=NS_sys_tilesize) {
+      graf_tile(&g.graf,dstx,dsty,*pcol,0);
+    }
+  }
 }
 
 /* Compare sprites for render order.
@@ -181,9 +182,9 @@ static void world_render_sprites(struct world *world) {
       if (sprite->imageid!=imageid) {
         graf_flush(&g.graf);
         imageid=sprite->imageid;
-        texid=texcache_get_image(&g.texcache,imageid);
+        graf_set_image(&g.graf,imageid);
       }
-      graf_draw_tile(&g.graf,texid,dstx,dsty,sprite->tileid,sprite->xform);
+      graf_tile(&g.graf,dstx,dsty,sprite->tileid,sprite->xform);
     }
   }
   graf_flush(&g.graf);

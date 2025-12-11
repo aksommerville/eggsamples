@@ -5,7 +5,6 @@
 #include "game/world/world.h"
 #include "game/world/map.h"
 #include "sprite.h"
-#include "opt/rom/rom.h"
 
 #define HERO_WALK_IMPULSE_BLACKOUT_TIME 0.100
 #define HERO_BUMP_REJECT_TIME 0.250
@@ -58,16 +57,16 @@ static int _hero_init(struct sprite *sprite) {
  */
  
 static void hero_trigger_poi(struct sprite *sprite,int x,int y,char how) {
-  struct rom_command_reader reader={.v=g.world->map->cmdv,.c=g.world->map->cmdc};
-  struct rom_command cmd;
-  while (rom_command_reader_next(&cmd,&reader)>0) {
+  struct cmdlist_reader reader={.v=g.world->map->cmdv,.c=g.world->map->cmdc};
+  struct cmdlist_entry cmd;
+  while (cmdlist_reader_next(&cmd,&reader)>0) {
     // Every POI command has its position in the first two bytes.
-    if ((cmd.argc<2)||(cmd.argv[0]!=x)||(cmd.argv[1]!=y)) continue;
+    if ((cmd.argc<2)||(cmd.arg[0]!=x)||(cmd.arg[1]!=y)) continue;
     switch (cmd.opcode) {
       case CMD_map_toggle: {
-          int flag=(cmd.argv[2]<<8)|cmd.argv[3];
+          int flag=(cmd.arg[2]<<8)|cmd.arg[3];
           int v=world_get_flag(g.world,flag)?0:1;
-          egg_play_sound((how=='b')?RID_sound_switch:RID_sound_treadle);
+          rpg_sound((how=='b')?RID_sound_switch:RID_sound_treadle);
           if (world_set_flag(g.world,flag,v)) world_apply_map_flags(g.world);
         } break;
       case CMD_map_door: if (how=='t') {
@@ -226,7 +225,7 @@ static void hero_update_walk(struct sprite *sprite,double elapsed) {
         if (world_poi_search(g.world,nx,ny)>=0) {
           hero_trigger_poi(sprite,nx,ny,'b');
         } else {
-          egg_play_sound(RID_sound_bump);
+          rpg_sound(RID_sound_bump);
         }
         SPRITE->bump_reject_clock=HERO_BUMP_REJECT_TIME;
         SPRITE->walkdir=SPRITE->facedir;
@@ -267,7 +266,6 @@ static void _hero_update(struct sprite *sprite,double elapsed) {
  */
  
 static void _hero_render(struct sprite *sprite,int16_t x,int16_t y) {
-  int texid=texcache_get_image(&g.texcache,sprite->imageid);
   uint8_t tileid=sprite->tileid;
   uint8_t xform=sprite->xform;
   
@@ -294,7 +292,8 @@ static void _hero_render(struct sprite *sprite,int16_t x,int16_t y) {
     if (SPRITE->animframe&2) tileid+=0x10;
   }
   
-  graf_draw_tile(&g.graf,texid,x,y,tileid,xform);
+  graf_set_image(&g.graf,sprite->imageid);
+  graf_tile(&g.graf,x,y,tileid,xform);
 }
 
 /* Type definition.

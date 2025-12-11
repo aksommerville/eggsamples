@@ -2,8 +2,6 @@
 #include "game/world/world.h"
 #include "game/world/map.h"
 #include "game/sprite/sprite.h"
-#include "opt/password/password.h"
-#include "opt/rom/rom.h"
 
 /* Delete.
  */
@@ -23,11 +21,13 @@ void world_del(struct world *world) {
  */
  
 static int world_init_save(struct world *world,const char *save,int savec) {
+  /*XXX 'password' unit was an Egg v1 thing, no equivalent in v2.
   char password[PASSWORD_ENCODED_SIZE(struct world_state)];
   int passwordc=egg_store_get(password,sizeof(password),"save",4);
   if ((passwordc<1)||(passwordc>sizeof(password))) return -1;
   PASSWORD_DECODE(world->state,password,passwordc)
   if (!decode_ok) return -1;
+  /**/
   //TODO Business-level consistency checks eg (hp<=hpmax)
   return 0;
 }
@@ -175,29 +175,29 @@ int world_load_map(struct world *world,int mapid) {
    * We'll do a second pass after, for flag-related commands.
    */
   world->poic=0;
-  struct rom_command_reader reader={.v=map->cmdv,.c=map->cmdc};
-  struct rom_command cmd;
-  while (rom_command_reader_next(&cmd,&reader)>0) {
+  struct cmdlist_reader reader={.v=map->cmdv,.c=map->cmdc};
+  struct cmdlist_entry cmd;
+  while (cmdlist_reader_next(&cmd,&reader)>0) {
     switch (cmd.opcode) {
       case CMD_map_hero: {
           if (!hero) {
-            double x=cmd.argv[0]+0.5;
-            double y=cmd.argv[1]+0.5;
+            double x=cmd.arg[0]+0.5;
+            double y=cmd.arg[1]+0.5;
             hero=sprite_new(&sprite_type_hero,0,0,0,x,y,0);
           }
         } break;
       case CMD_map_sprite: {
-          uint8_t x=cmd.argv[0];
-          uint8_t y=cmd.argv[1];
-          uint16_t spriteid=(cmd.argv[2]<<8)|cmd.argv[3];
-          uint32_t arg=(cmd.argv[4]<<24)|(cmd.argv[5]<<16)|(cmd.argv[6]<<8)|cmd.argv[7];
+          uint8_t x=cmd.arg[0];
+          uint8_t y=cmd.arg[1];
+          uint16_t spriteid=(cmd.arg[2]<<8)|cmd.arg[3];
+          uint32_t arg=(cmd.arg[4]<<24)|(cmd.arg[5]<<16)|(cmd.arg[6]<<8)|cmd.arg[7];
           struct sprite *sprite=sprite_new_res(spriteid,x,y,arg);
         } break;
       case CMD_map_door: // All POI commands with position in the first two bytes.
       case CMD_map_toggle:
         if (world->poic<POI_LIMIT) {
-          uint8_t x=cmd.argv[0];
-          uint8_t y=cmd.argv[1];
+          uint8_t x=cmd.arg[0];
+          uint8_t y=cmd.arg[1];
           int p=world_poi_search(world,x,y);
           if (p<0) {
             p=-p-1;
@@ -213,7 +213,7 @@ int world_load_map(struct world *world,int mapid) {
    * This is a good place for miscellaneous "starting a new map" stuff.
    */
   world_apply_map_flags(world);
-  egg_play_song(map->songid,0,1);
+  rpg_song(map->songid);
   world_sort_sprites_fully(world);
   
   return 0;
@@ -260,14 +260,14 @@ int world_set_flag(struct world *world,int flag,int v) {
  */
  
 void world_apply_map_flags(struct world *world) {
-  struct rom_command_reader reader={.v=world->map->cmdv,.c=world->map->cmdc};
-  struct rom_command cmd;
-  while (rom_command_reader_next(&cmd,&reader)>0) {
+  struct cmdlist_reader reader={.v=world->map->cmdv,.c=world->map->cmdc};
+  struct cmdlist_entry cmd;
+  while (cmdlist_reader_next(&cmd,&reader)>0) {
     switch (cmd.opcode) {
       case CMD_map_flagtile: {
-          uint8_t x=cmd.argv[0];
-          uint8_t y=cmd.argv[1];
-          uint16_t flag=(cmd.argv[2]<<8)|cmd.argv[3];
+          uint8_t x=cmd.arg[0];
+          uint8_t y=cmd.arg[1];
+          uint16_t flag=(cmd.arg[2]<<8)|cmd.arg[3];
           if ((x<world->map->w)&&(y<world->map->h)) {
             int p=y*world->map->w+x;
             world->map->v[p]=world->map->ov[p];

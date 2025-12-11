@@ -59,7 +59,7 @@ So really not sure yet exactly what the migration entails.
 - [x] hello_world. ELIMINATED. What was this even for?
 - [x] snake
 - [x] eggsweeper
-- [ ] rpg
+- [x] rpg
 - [ ] tetris
 - [ ] Then update docs and such.
 

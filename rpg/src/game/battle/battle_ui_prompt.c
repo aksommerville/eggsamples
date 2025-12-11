@@ -76,7 +76,8 @@ void prompt_render(struct prompt *prompt) {
     int16_t dstx=prompt->x+MARGIN_LEFT;
     int16_t dsty=prompt->y+MARGIN_TOP;
     // To be strictly polite, we should clip against our bounds. I'm going to assume it always fits.
-    graf_draw_decal(&g.graf,prompt->texid,dstx,dsty,0,0,prompt->texw,prompt->texh,0);
+    graf_set_input(&g.graf,prompt->texid);
+    graf_decal(&g.graf,dstx,dsty,0,0,prompt->texw,prompt->texh);
   }
   textbox_render_border(prompt->x,prompt->y,prompt->w,prompt->h);
   if (prompt->awaiting_ack) {
@@ -96,8 +97,8 @@ int prompt_vertical_margins() {
  
 void prompt_set_text(struct prompt *prompt,const char *src,int srcc) {
   egg_texture_del(prompt->texid);
-  prompt->texid=font_tex_oneline(g.font,src,srcc,prompt->w-MARGIN_RIGHT-MARGIN_LEFT,0xffffffff);
-  egg_texture_get_status(&prompt->texw,&prompt->texh,prompt->texid);
+  prompt->texid=font_render_to_texture(0,g.font,src,srcc,prompt->w-MARGIN_RIGHT-MARGIN_LEFT,font_get_line_height(g.font),0xffffffff);
+  egg_texture_get_size(&prompt->texw,&prompt->texh,prompt->texid);
   prompt->awaiting_ack=1;
 }
 
@@ -108,6 +109,7 @@ void prompt_set_res(struct prompt *prompt,int rid,int ix) {
 }
 
 void prompt_set_res_iii(struct prompt *prompt,int rid,int ix,int a,int b,int c) {
+  const char *tmp=__func__; int tmpc=-1;/*TODO
   struct strings_insertion insv[]={
     {'i',.i=a},
     {'i',.i=b},
@@ -116,10 +118,12 @@ void prompt_set_res_iii(struct prompt *prompt,int rid,int ix,int a,int b,int c) 
   char tmp[64];
   int tmpc=strings_format(tmp,sizeof(tmp),rid,ix,insv,sizeof(insv)/sizeof(insv[0]));
   if (tmpc<0) tmpc=0; else if (tmpc>sizeof(tmp)) tmpc=sizeof(tmp);
+  /**/
   prompt_set_text(prompt,tmp,tmpc);
 }
 
 void prompt_set_res_sss(struct prompt *prompt,int rid,int ix,const char *a,int ac,const char *b,int bc,const char *c,int cc) {
+  const char *tmp=__func__; int tmpc=-1;/*TODO
   struct strings_insertion insv[]={
     {'s',.s={a,ac}},
     {'s',.s={b,bc}},
@@ -128,10 +132,12 @@ void prompt_set_res_sss(struct prompt *prompt,int rid,int ix,const char *a,int a
   char tmp[64];
   int tmpc=strings_format(tmp,sizeof(tmp),rid,ix,insv,sizeof(insv)/sizeof(insv[0]));
   if (tmpc<0) tmpc=0; else if (tmpc>sizeof(tmp)) tmpc=sizeof(tmp);
+  /**/
   prompt_set_text(prompt,tmp,tmpc);
 }
 
 void prompt_set_res_sis(struct prompt *prompt,int rid,int ix,const char *a,int ac,int b,const char *c,int cc) {
+  const char *tmp=__func__; int tmpc=-1;/*TODO
   struct strings_insertion insv[]={
     {'s',.s={a,ac}},
     {'i',.i=b},
@@ -140,5 +146,6 @@ void prompt_set_res_sis(struct prompt *prompt,int rid,int ix,const char *a,int a
   char tmp[64];
   int tmpc=strings_format(tmp,sizeof(tmp),rid,ix,insv,sizeof(insv)/sizeof(insv[0]));
   if (tmpc<0) tmpc=0; else if (tmpc>sizeof(tmp)) tmpc=sizeof(tmp);
+  /**/
   prompt_set_text(prompt,tmp,tmpc);
 }

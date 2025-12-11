@@ -16,21 +16,20 @@
 struct world; // game/world/world.h
 
 #include "egg/egg.h"
-#include "opt/stdlib/egg-stdlib.h"
-#include "opt/graf/graf.h"
-#include "opt/text/text.h"
-#include "egg_rom_toc.h"
+#include "util/stdlib/egg-stdlib.h"
+#include "util/graf/graf.h"
+#include "util/font/font.h"
+#include "util/res/res.h"
+#include "egg_res_toc.h"
 #include "shared_symbols.h"
 #include "layer/layer.h"
 
 extern struct g {
-  void *rom;
-  int romc;
   struct graf graf;
-  struct texcache texcache;
   struct font *font;
   int pvinput;
   int framec; // Global render count, for cheap animations. Where it's worth being correct, use a private game-time clock.
+  int song_playing;
   
   struct layer **layerv;
   int layerc,layera;
@@ -44,9 +43,10 @@ extern struct g {
  * We track certain resource types (not all of them).
  * Maps and tilesheets are partly decoded during load.
  */
-int rpg_res_init(const void *rom,int romc);
+int rpg_res_init();
 int rpg_res_get(void *dstpp,int tid,int rid);
 struct map *rpg_map_get(int rid);
+int strings_get(void *dstpp,int rid,int strix);
 
 /* Helpers for scalar direction, converting to and from deltas.
  */
@@ -77,5 +77,8 @@ static inline uint8_t dir_from_delta(int dx,int dy) {
   if (dy<0) dir|=DIR_N; else if (dy>0) dir|=DIR_S;
   return dir;
 }
+
+void rpg_song(int rid);
+void rpg_sound(int rid);
 
 #endif

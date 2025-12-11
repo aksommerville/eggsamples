@@ -1,5 +1,4 @@
 #include "battle_internal.h"
-#include "opt/rom/rom.h"
 
 /* Delete.
  */
@@ -108,7 +107,7 @@ static int battle_ready(struct battle *battle) {
   if ((err=team_validate(battle->teamv+0))<0) return err;
   if ((err=team_validate(battle->teamv+1))<0) return err;
   battle_pack_ui(battle);
-  egg_play_song(battle->songid,0,1);
+  rpg_song(battle->songid);
   battle->ready=1;
   battle_advance(battle);
   return 0;
@@ -151,19 +150,19 @@ static int battle_add_fighter_res(struct battle *battle,struct team *team,int fi
   }
   int hp=0,namec=0,imageid=0,tileid=0;
   const char *name=0;
-  struct rom_command_reader reader={.v=src,.c=srcc};
-  struct rom_command cmd;
-  while (rom_command_reader_next(&cmd,&reader)>0) {
+  struct cmdlist_reader reader={.v=src,.c=srcc};
+  struct cmdlist_entry cmd;
+  while (cmdlist_reader_next(&cmd,&reader)>0) {
     switch (cmd.opcode) {
-      case CMD_fighter_hp: hp=(cmd.argv[0]<<8)|cmd.argv[1]; break;
+      case CMD_fighter_hp: hp=(cmd.arg[0]<<8)|cmd.arg[1]; break;
       case CMD_fighter_name: {
-          int rid=(cmd.argv[0]<<8)|cmd.argv[1];
-          int ix=(cmd.argv[2]<<8)|cmd.argv[3];
+          int rid=(cmd.arg[0]<<8)|cmd.arg[1];
+          int ix=(cmd.arg[2]<<8)|cmd.arg[3];
           namec=strings_get(&name,rid,ix);
         } break;
       case CMD_fighter_image: {
-          imageid=(cmd.argv[0]<<8)|cmd.argv[1];
-          tileid=cmd.argv[2];
+          imageid=(cmd.arg[0]<<8)|cmd.arg[1];
+          tileid=cmd.arg[2];
         } break;
     }
   }
@@ -231,16 +230,16 @@ int battle_setup_res(struct battle *battle,struct world *world,int battleid) {
     fprintf(stderr,"battle:%d not found\n",battleid);
     return -1;
   }
-  struct rom_command_reader reader={.v=src,.c=srcc};
-  struct rom_command cmd;
-  while (rom_command_reader_next(&cmd,&reader)>0) {
+  struct cmdlist_reader reader={.v=src,.c=srcc};
+  struct cmdlist_entry cmd;
+  while (cmdlist_reader_next(&cmd,&reader)>0) {
     switch (cmd.opcode) {
-      case CMD_battle_gold: battle->gold=(cmd.argv[0]<<8)|cmd.argv[1]; break;
-      case CMD_battle_xp: battle->xp=(cmd.argv[0]<<8)|cmd.argv[1]; break;
-      case CMD_battle_song: battle->songid=(cmd.argv[0]<<8)|cmd.argv[1]; break;
+      case CMD_battle_gold: battle->gold=(cmd.arg[0]<<8)|cmd.arg[1]; break;
+      case CMD_battle_xp: battle->xp=(cmd.arg[0]<<8)|cmd.arg[1]; break;
+      case CMD_battle_song: battle->songid=(cmd.arg[0]<<8)|cmd.arg[1]; break;
       case CMD_battle_fighter: {
-          int fighterid=(cmd.argv[0]<<8)|cmd.argv[1];
-          int c=(cmd.argv[2]<<8)|cmd.argv[3];
+          int fighterid=(cmd.arg[0]<<8)|cmd.arg[1];
+          int c=(cmd.arg[2]<<8)|cmd.arg[3];
           if (battle_add_fighter_res(battle,battle->teamv+1,fighterid,c)<0) return -1;
         } break;
     }
@@ -279,7 +278,7 @@ void battle_suspend(struct battle *battle) {
  */
  
 void battle_resume(struct battle *battle,int input1,int input2) {
-  egg_play_song(battle->songid,0,1);
+  rpg_song(battle->songid);
 }
 
 /* General input.
@@ -296,7 +295,7 @@ void battle_input(struct battle *battle,int playerid,int btnid,int value,int sta
         case PROMPT_STATE_WELCOME: battle->welcomed=1; break;
         case PROMPT_STATE_FAREWELL: battle->farewelled=1; break;
       }
-      egg_play_sound(RID_sound_ui_activate);
+      rpg_sound(RID_sound_ui_activate);
       prompt_ack(battle->prompt);
       battle_advance(battle);
     }

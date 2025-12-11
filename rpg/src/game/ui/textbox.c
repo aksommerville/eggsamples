@@ -1,6 +1,5 @@
 #include "game/rpg.h"
 #include "textbox.h"
-#include "opt/text/text.h"
 
 #define BORDERW 2
 #define TEXTBOX_SIZE_MIN NS_sys_tilesize
@@ -84,8 +83,8 @@ int textbox_set_option(struct textbox *textbox,int col,int row,const char *text,
   option->text=ntext;
   if (option->texid) egg_texture_del(option->texid);
   if (option->textc=textc) {
-    option->texid=font_tex_oneline(g.font,text,textc,FBW,0xffffffff);
-    egg_texture_get_status(&option->texw,&option->texh,option->texid);
+    option->texid=font_render_to_texture(0,g.font,text,textc,FBW,font_get_line_height(g.font),0xffffffff);
+    egg_texture_get_size(&option->texw,&option->texh,option->texid);
   } else {
     option->texid=0;
     option->texw=option->texh=0;

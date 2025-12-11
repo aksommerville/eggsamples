@@ -10,26 +10,24 @@ struct g g={0};
 void egg_client_quit(int status) {
 }
 
+void egg_client_notify(int k,int v) {
+}
+
 int egg_client_init() {
 
   int fbw=0,fbh=0;
-  egg_texture_get_status(&fbw,&fbh,1);
+  egg_texture_get_size(&fbw,&fbh,1);
   if ((fbw!=FBW)||(fbh!=FBH)) {
     fprintf(stderr,"Expected %dx%d framebuffer (rpg.h) but got %dx%d (metadata)\n",FBW,FBH,fbw,fbh);
     return -1;
   }
   
-  if ((g.romc=egg_get_rom(0,0))<=0) return -1;
-  if (!(g.rom=malloc(g.romc))) return -1;
-  if (egg_get_rom(g.rom,g.romc)!=g.romc) return -1;
-  strings_set_rom(g.rom,g.romc);
-  
   if (!(g.font=font_new())) return -1;
-  if (font_add_image_resource(g.font,0x0020,RID_image_font9_0020)<0) return -1;
+  if (font_add_image(g.font,RID_image_font9_0020,0x0020)<0) return -1;
   
   srand_auto();
   
-  int err=rpg_res_init(g.rom,g.romc);
+  int err=rpg_res_init();
   if (err<0) {
     if (err!=-2) fprintf(stderr,"Unspecified error loading resources.\n");
     return -2;
@@ -159,7 +157,7 @@ void egg_client_render() {
   /* If there isn't an opaque layer, black out the framebuffer.
    */
   if (opaquep<0) {
-    graf_draw_rect(&g.graf,0,0,FBW,FBH,0x000000ff);
+    graf_fill_rect(&g.graf,0,0,FBW,FBH,0x000000ff);
     opaquep=0;
   }
   
@@ -224,4 +222,17 @@ struct layer *layer_spawn(int len) {
   g.layerv[g.layerc++]=layer;
   g.layerdirty=1;
   return layer;
+}
+
+/* Audio.
+ */
+ 
+void rpg_song(int rid) {
+  if (rid==g.song_playing) return;
+  g.song_playing=rid;
+  egg_play_song(1,rid,1,0.5f,1.0f);
+}
+
+void rpg_sound(int rid) {
+  egg_play_sound(rid,1.0f,0.0f);
 }

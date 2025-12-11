@@ -1,7 +1,6 @@
 #include "game/rpg.h"
 #include "game/world/world.h"
 #include "sprite.h"
-#include "opt/rom/rom.h"
 
 /* Type IDs.
  */
@@ -16,10 +15,11 @@ const struct sprite_type *sprite_type_by_id(int id) {
 }
 
 const struct sprite_type *sprite_type_from_commands(const void *src,int srcc) {
-  struct rom_command_reader reader={.v=src,.c=srcc};
-  struct rom_command cmd;
-  while (rom_command_reader_next(&cmd,&reader)>0) {
-    if (cmd.opcode==CMD_sprite_type) return sprite_type_by_id((cmd.argv[0]<<8)|cmd.argv[1]);
+  struct cmdlist_reader reader;
+  if (sprite_reader_init(&reader,src,srcc)<0) return 0;
+  struct cmdlist_entry cmd;
+  while (cmdlist_reader_next(&cmd,&reader)>0) {
+    if (cmd.opcode==CMD_sprite_type) return sprite_type_by_id((cmd.arg[0]<<8)|cmd.arg[1]);
   }
   return 0;
 }
@@ -53,14 +53,17 @@ struct sprite *sprite_new(const struct sprite_type *type,int rid,const void *cmd
   
   /* Apply generic commands.
    */
-  struct rom_command_reader reader={.v=cmdv,.c=cmdc};
-  struct rom_command cmd;
-  while (rom_command_reader_next(&cmd,&reader)>0) {
-    switch (cmd.opcode) {
-      case CMD_sprite_solid: sprite->solid=1; break;
-      case CMD_sprite_image: sprite->imageid=(cmd.argv[0]<<8)|cmd.argv[1]; break;
-      case CMD_sprite_tile: sprite->tileid=cmd.argv[0]; sprite->xform=cmd.argv[1]; break;
-      case CMD_sprite_layer: sprite->layer=cmd.argv[0]; break;
+  if (cmdc) {
+    struct cmdlist_reader reader;
+    if (sprite_reader_init(&reader,cmdv,cmdc)<0) { sprite_del(sprite); return 0; }
+    struct cmdlist_entry cmd;
+    while (cmdlist_reader_next(&cmd,&reader)>0) {
+      switch (cmd.opcode) {
+        case CMD_sprite_solid: sprite->solid=1; break;
+        case CMD_sprite_image: sprite->imageid=(cmd.arg[0]<<8)|cmd.arg[1]; break;
+        case CMD_sprite_tile: sprite->tileid=cmd.arg[0]; sprite->xform=cmd.arg[1]; break;
+        case CMD_sprite_layer: sprite->layer=cmd.arg[0]; break;
+      }
     }
   }
   
@@ -94,8 +97,6 @@ struct sprite *sprite_new(const struct sprite_type *type,int rid,const void *cmd
 struct sprite *sprite_new_res(int rid,uint8_t x,uint8_t y,uint32_t arg) {
   const void *serial=0;
   int serialc=rpg_res_get(&serial,EGG_TID_sprite,rid);
-  struct rom_sprite rspr;
-  if (rom_sprite_decode(&rspr,serial,serialc)<0) return 0;
-  const struct sprite_type *type=sprite_type_from_commands(rspr.cmdv,rspr.cmdc);
-  return sprite_new(type,rid,rspr.cmdv,rspr.cmdc,x+0.5,y+0.5,arg);
+  const struct sprite_type *type=sprite_type_from_commands(serial,serialc);
+  return sprite_new(type,rid,serial,serialc,x+0.5,y+0.5,arg);
 }

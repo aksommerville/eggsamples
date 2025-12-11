@@ -82,8 +82,8 @@ static void roster_rebuild_labels(struct roster *roster) {
   while (roster->labelc<roster->team->fighterc) {
     const struct fighter *fighter=roster->team->fighterv+roster->labelc;
     struct label *label=roster->labelv+roster->labelc++;
-    label->texid=font_tex_oneline(g.font,fighter->name,fighter->namec,roster->w,0xffffffff);
-    egg_texture_get_status(&label->texw,&label->texh,label->texid);
+    label->texid=font_render_to_texture(0,g.font,fighter->name,fighter->namec,roster->w,roster->h,0xffffffff);
+    egg_texture_get_size(&label->texw,&label->texh,label->texid);
     //label->disphp=0;
     label->disphp=fighter->hp;
     label->highlight=0;
@@ -101,20 +101,21 @@ static void roster_draw_hp(struct roster *roster,int16_t x,int16_t y,int16_t w,i
   if (hp<0) hp=0; else if (hp>9999) hp=9999;
   if (max<0) max=0; else if (max>9999) max=9999;
   int limit=10,div=1;
+  graf_set_input(&g.graf,texid);
   while (max>div-1) {
     int digit=(max/div)%10;
-    graf_draw_tile(&g.graf,texid,dstx,dsty,'0'+digit,0);
+    graf_tile(&g.graf,dstx,dsty,'0'+digit,0);
     dstx-=xstride;
     div=limit;
     limit*=10;
   }
-  graf_draw_tile(&g.graf,texid,dstx,dsty,'/',0);
+  graf_tile(&g.graf,dstx,dsty,'/',0);
   dstx-=xstride;
   limit=10;
   div=1;
   while (hp>=div-1) {
     int digit=(hp/div)%10;
-    graf_draw_tile(&g.graf,texid,dstx,dsty,'0'+digit,0);
+    graf_tile(&g.graf,dstx,dsty,'0'+digit,0);
     dstx-=xstride;
     div=limit;
     limit*=10;
@@ -125,10 +126,10 @@ static void roster_draw_hp(struct roster *roster,int16_t x,int16_t y,int16_t w,i
     int16_t barw=x+(w>>1)-barx;
     int16_t barh=3;
     if ((barw>0)&&(barh>0)) {
-      graf_draw_rect(&g.graf,barx,bary,barw,barh,0x404040ff);
+      graf_fill_rect(&g.graf,barx,bary,barw,barh,0x404040ff);
       int thumbw=(hp*barw)/max;
       if (thumbw>barw) thumbw=barw;
-      graf_draw_rect(&g.graf,barx,bary,thumbw,barh,0xffff00ff);
+      graf_fill_rect(&g.graf,barx,bary,thumbw,barh,0xffff00ff);
     }
   }
 }
@@ -167,19 +168,19 @@ void roster_render(struct roster *roster) {
     const int16_t margin_left=4;
     const int16_t margin_top=4;
     const int16_t rowh=roster->labelv[0].texh;
-    int texid_tiles=texcache_get_image(&g.texcache,RID_image_uitiles);
     int16_t dsty=roster->y+margin_top;
     struct label *label=roster->labelv;
     const struct fighter *fighter=roster->team->fighterv;
     int i=roster->labelc;
     for (;i-->0;label++,fighter++) {
       if (label->highlight) {
-        graf_draw_rect(&g.graf,roster->x,dsty-1,roster->w,rowh*2+1,roster->highlight_color);
+        graf_fill_rect(&g.graf,roster->x,dsty-1,roster->w,rowh*2+1,roster->highlight_color);
       }
-      graf_draw_decal(&g.graf,label->texid,roster->x+margin_left,dsty,0,0,label->texw,label->texh,0);
+      graf_set_input(&g.graf,label->texid);
+      graf_decal(&g.graf,roster->x+margin_left,dsty,0,0,label->texw,label->texh);
       dsty+=rowh;
       label->disphp=roster_hp_approach(fighter->hp,label->disphp);
-      roster_draw_hp(roster,roster->x+margin_left,dsty,roster->w-margin_left*2,rowh,label->disphp,fighter->hpmax,texid_tiles);
+      roster_draw_hp(roster,roster->x+margin_left,dsty,roster->w-margin_left*2,rowh,label->disphp,fighter->hpmax,graf_tex(&g.graf,RID_image_uitiles));
       dsty+=rowh;
     }
   }

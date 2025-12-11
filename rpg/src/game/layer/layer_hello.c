@@ -79,7 +79,7 @@ static void hello_quit(struct layer *layer) {
 static void _hello_input(struct layer *layer,int btnid,int value,int state) {
   if (value) switch (btnid) {
     case EGG_BTN_FOCUS: {
-        egg_play_song(RID_song_hello,0,1);
+        rpg_song(RID_song_hello);
         hello_reacquire_save(layer);
         menu_enable_button(LAYER->menu,MENUITEM_CONTINUE,LAYER->savec);
         if (!LAYER->menu->focus_to) menu_motion(LAYER->menu,0,1); // autofocus, if not yet established.
@@ -100,7 +100,7 @@ static void _hello_update(struct layer *layer,double elapsed) {
  */
  
 static void _hello_render(struct layer *layer) {
-  graf_draw_rect(&g.graf,0,0,FBW,FBH,0x000000ff);
+  graf_fill_rect(&g.graf,0,0,FBW,FBH,0x000000ff);
   menu_render(LAYER->menu);
 }
 
