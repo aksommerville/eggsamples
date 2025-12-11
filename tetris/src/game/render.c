@@ -27,7 +27,7 @@ static struct {
  */
 
 static void draw_box_loose(int16_t x,int16_t y,int16_t w,int16_t h) {
-  graf_draw_rect(&g.graf,x,y,w,h,0x000000ff);
+  graf_fill_rect(&g.graf,x,y,w,h,0x000000ff);
   if ((w<NS_sys_tilesize)||(h<NS_sys_tilesize)) return; // Don't attempt the border if either axis smaller than a tile.
   
   // Corner positions. They are not necessarily a clean tile width apart, but always at least 2 tile widths.
@@ -38,29 +38,30 @@ static void draw_box_loose(int16_t x,int16_t y,int16_t w,int16_t h) {
   
   // Draw the corners, and one leg extending leftward from the 'z' sides, to cover non-tilesize slack.
   // The edge tiles are safe to render over each other misaligned (ie no alpha, and no off-axis features).
-  graf_draw_tile(&g.graf,g.texid_tiles,xa,ya,0x20,0);
-  graf_draw_tile(&g.graf,g.texid_tiles,xz,ya,0x22,0);
-  graf_draw_tile(&g.graf,g.texid_tiles,xa,yz,0x40,0);
-  graf_draw_tile(&g.graf,g.texid_tiles,xz,yz,0x42,0);
+  graf_set_input(&g.graf,g.texid_tiles);
+  graf_tile(&g.graf,xa,ya,0x20,0);
+  graf_tile(&g.graf,xz,ya,0x22,0);
+  graf_tile(&g.graf,xa,yz,0x40,0);
+  graf_tile(&g.graf,xz,yz,0x42,0);
   if (w%NS_sys_tilesize) {
-    graf_draw_tile(&g.graf,g.texid_tiles,xz-NS_sys_tilesize,ya,0x21,0);
-    graf_draw_tile(&g.graf,g.texid_tiles,xz-NS_sys_tilesize,yz,0x41,0);
+    graf_tile(&g.graf,xz-NS_sys_tilesize,ya,0x21,0);
+    graf_tile(&g.graf,xz-NS_sys_tilesize,yz,0x41,0);
   }
   if (h%NS_sys_tilesize) {
-    graf_draw_tile(&g.graf,g.texid_tiles,xa,yz-NS_sys_tilesize,0x30,0);
-    graf_draw_tile(&g.graf,g.texid_tiles,xz,yz-NS_sys_tilesize,0x32,0);
+    graf_tile(&g.graf,xa,yz-NS_sys_tilesize,0x30,0);
+    graf_tile(&g.graf,xz,yz-NS_sys_tilesize,0x32,0);
   }
   
   // Edges.
   int i=w/NS_sys_tilesize;
   int16_t p=x+(NS_sys_tilesize>>1);
   for (;i-->0;p+=NS_sys_tilesize) {
-    graf_draw_tile(&g.graf,g.texid_tiles,p,ya,0x21,0);
-    graf_draw_tile(&g.graf,g.texid_tiles,p,yz,0x41,0);
+    graf_tile(&g.graf,p,ya,0x21,0);
+    graf_tile(&g.graf,p,yz,0x41,0);
   }
   for (i=h/NS_sys_tilesize,p=y+(NS_sys_tilesize>>1);i-->0;p+=NS_sys_tilesize) {
-    graf_draw_tile(&g.graf,g.texid_tiles,xa,p,0x30,0);
-    graf_draw_tile(&g.graf,g.texid_tiles,xz,p,0x32,0);
+    graf_tile(&g.graf,xa,p,0x30,0);
+    graf_tile(&g.graf,xz,p,0x32,0);
   }
 }
 
@@ -80,7 +81,8 @@ static void draw_unused(const struct rect *r) {
   int16_t srcy=NS_sys_tilesize*2;
   int16_t dstx=r->x+(r->w>>1)-(w>>1);
   int16_t dsty=r->y+(r->h>>1)-(h>>1);
-  graf_draw_decal(&g.graf,g.texid_tiles,dstx,dsty,srcx,srcy,w,h,0);
+  graf_set_input(&g.graf,g.texid_tiles);
+  graf_decal(&g.graf,dstx,dsty,srcx,srcy,w,h);
 }
 
 /* Fetch hiscores and write into an RGBA buffer.
@@ -105,6 +107,7 @@ static int decuint_repr(char *dst,int dsta,int v) {
 }
  
 static void render_generate_hiscores_rgba(void *dst,int dstw,int dsth) {
+  uint32_t *DST=dst;
   int lineh=font_get_line_height(g.font);
   struct db_score scorev[20];
   int scorec=db_get_scores(scorev,20);
@@ -122,11 +125,14 @@ static void render_generate_hiscores_rgba(void *dst,int dstw,int dsth) {
     pcc=2;
     lcc=decuint_repr(lcv,sizeof(lcv),score->linec);
     sc=decuint_repr(sv,sizeof(sv),score->score);
-    int lw=font_measure_line(g.font,lcv,lcc);
-    int sw=font_measure_line(g.font,sv,sc);
-    font_render_string(dst,dstw,dsth,dstw<<2,      0,dsty,g.font,pcv,pcc,0xffffffff);
-    font_render_string(dst,dstw,dsth,dstw<<2,  60-lw,dsty,g.font,lcv,lcc,0xffffffff);
-    font_render_string(dst,dstw,dsth,dstw<<2,dstw-sw,dsty,g.font,sv,sc,0xffffffff);
+    int lw=font_measure_string(g.font,lcv,lcc);
+    int sw=font_measure_string(g.font,sv,sc);
+    font_render(DST+dsty*dstw        ,dstw      ,dsth-dsty,dstw<<2,g.font,pcv,pcc,0xffffffff);
+    font_render(DST+dsty*dstw+60-lw  ,dstw-60+lw,dsth-dsty,dstw<<2,g.font,lcv,lcc,0xffffffff);
+    font_render(DST+dsty*dstw+dstw-sw,sw        ,dsth-dsty,dstw<<2,g.font,sv,sc,0xffffffff);
+    //font_render_string(dst,dstw,dsth,dstw<<2,      0,dsty,g.font,pcv,pcc,0xffffffff);
+    //font_render_string(dst,dstw,dsth,dstw<<2,  60-lw,dsty,g.font,lcv,lcc,0xffffffff);
+    //font_render_string(dst,dstw,dsth,dstw<<2,dstw-sw,dsty,g.font,sv,sc,0xffffffff);
     dsty+=lineh;
   }
 }
@@ -171,7 +177,8 @@ static void draw_hiscores(const struct rect *bounds) {
   // I don't think bounds will ever change, so it should be exactly right every time, but let's be safe.
   int cpw=r.hsw; if (cpw>bounds->w) cpw=bounds->w;
   int cph=r.hsh; if (cph>bounds->h) cph=bounds->h;
-  graf_draw_decal(&g.graf,r.hstexid,bounds->x,bounds->y,0,0,cpw,cph,0);
+  graf_set_input(&g.graf,r.hstexid);
+  graf_decal(&g.graf,bounds->x,bounds->y,0,0,cpw,cph);
 }
 
 /* Draw menu.
@@ -191,7 +198,7 @@ static void draw_menu(const struct rect *bounds,int fieldid) {
       if (cfield==fieldid) {
         int col=cursor->p%5;
         int row=(cursor->p/5)&1;
-        graf_draw_rect(&g.graf,
+        graf_fill_rect(&g.graf,
           bounds->x+NS_sys_tilesize*col*2+(NS_sys_tilesize>>2),
           bounds->y+NS_sys_tilesize*(7+row*2)-(NS_sys_tilesize>>2),
           NS_sys_tilesize+(NS_sys_tilesize>>1),
@@ -200,7 +207,7 @@ static void draw_menu(const struct rect *bounds,int fieldid) {
         );
       }
     } else if (cursor->p==20+fieldid) { // Single/Double
-      graf_draw_rect(&g.graf,
+      graf_fill_rect(&g.graf,
         bounds->x+NS_sys_tilesize+((r.fieldc-1)*NS_sys_tilesize*4),
         bounds->y+NS_sys_tilesize*3+(NS_sys_tilesize>>1),
         NS_sys_tilesize*4,NS_sys_tilesize*3,
@@ -210,24 +217,25 @@ static void draw_menu(const struct rect *bounds,int fieldid) {
   }
 
   // A big colorful "TETRIS" on top.
-  graf_draw_decal(&g.graf,g.texid_tiles,
+  graf_set_input(&g.graf,g.texid_tiles);
+  graf_decal(&g.graf,
     bounds->x+(bounds->w>>1)-NS_sys_tilesize*5,bounds->y,
     0,NS_sys_tilesize*5,
-    NS_sys_tilesize*10,NS_sys_tilesize*3,0
+    NS_sys_tilesize*10,NS_sys_tilesize*3
   );
   
   // Single/double selector.
-  graf_draw_decal(&g.graf,g.texid_tiles,
+  graf_decal(&g.graf,
     bounds->x+NS_sys_tilesize*1+(NS_sys_tilesize>>1),
     bounds->y+NS_sys_tilesize*4,
     NS_sys_tilesize*10,NS_sys_tilesize*5,
-    NS_sys_tilesize*3,NS_sys_tilesize*2,0
+    NS_sys_tilesize*3,NS_sys_tilesize*2
   );
-  graf_draw_decal(&g.graf,g.texid_tiles,
+  graf_decal(&g.graf,
     bounds->x+NS_sys_tilesize*5+(NS_sys_tilesize>>1),
     bounds->y+NS_sys_tilesize*4,
     NS_sys_tilesize*13,NS_sys_tilesize*5,
-    NS_sys_tilesize*3,NS_sys_tilesize*2,0
+    NS_sys_tilesize*3,NS_sys_tilesize*2
   );
   
   // Levels 0..9
@@ -235,7 +243,7 @@ static void draw_menu(const struct rect *bounds,int fieldid) {
   int row=0; for (;row<2;row++,dsty+=NS_sys_tilesize*2) {
     int16_t dstx=bounds->x+NS_sys_tilesize;
     int col=0; for (;col<5;col++,dstx+=NS_sys_tilesize*2) {
-      graf_draw_tile(&g.graf,g.texid_tiles,dstx,dsty,0x80+row*5+col,0);
+      graf_tile(&g.graf,dstx,dsty,0x80+row*5+col,0);
     }
   }
 }
@@ -311,7 +319,7 @@ static void render_layout() {
  */
  
 void render() {
-  graf_draw_rect(&g.graf,0,0,FBW,FBH,0x323c78ff);
+  graf_fill_rect(&g.graf,0,0,FBW,FBH,0x323c78ff);
   
   if (g.fieldc!=r.fieldc) {
     r.fieldc=g.fieldc;

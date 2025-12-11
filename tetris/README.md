@@ -1,6 +1,6 @@
 # Tetris
 
-Requires [Egg](https://github.com/aksommerville/egg) to build.
+Requires [Egg v2](https://github.com/aksommerville/egg2) to build.
 
 ## Differences from NES Tetris
 

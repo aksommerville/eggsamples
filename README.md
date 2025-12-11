@@ -60,7 +60,7 @@ So really not sure yet exactly what the migration entails.
 - [x] snake
 - [x] eggsweeper
 - [x] rpg
-- [ ] tetris
+- [s] tetris
 - [ ] Then update docs and such.
 
 - Implement some well-known styles, building out specific framework as needed:

@@ -14,11 +14,12 @@
 #define SCORE_LIMIT 999999
 
 #include "egg/egg.h"
-#include "egg_rom_toc.h"
+#include "egg_res_toc.h"
 #include "shared_symbols.h"
-#include "opt/stdlib/egg-stdlib.h"
-#include "opt/graf/graf.h"
-#include "opt/text/text.h"
+#include "util/stdlib/egg-stdlib.h"
+#include "util/graf/graf.h"
+#include "util/font/font.h"
+#include "util/res/res.h"
 #include "bag.h"
 #include "field.h"
 
@@ -28,7 +29,6 @@ extern struct g {
   int texid_tiles;
   struct font *font;
   struct graf graf;
-  struct texcache texcache;
   int fieldc; // 1,2: How many fields to render. Modes should try to support both.
   int running;
   struct field l,r; // Game models.
@@ -39,6 +39,7 @@ extern struct g {
     uint32_t color;
   } cursorv[8];
   double input_blackout;
+  int song_playing;
 } g;
 
 // render.c
@@ -57,5 +58,8 @@ struct db_score {
   int playerc,linec,score,year,month,day,hour,minute;
 };
 int db_get_scores(struct db_score *dst,int dsta);
+
+void tetris_song(int rid);
+void tetris_sound(int rid);
 
 #endif

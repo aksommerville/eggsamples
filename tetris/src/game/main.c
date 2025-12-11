@@ -5,23 +5,25 @@ struct g g={0};
 void egg_client_quit(int status) {
 }
 
+void egg_client_notify(int k,int v) {
+}
+
 int egg_client_init() {
   
   int fbw=0,fbh=0;
-  egg_texture_get_status(&fbw,&fbh,1);
+  egg_texture_get_size(&fbw,&fbh,1);
   if ((fbw!=FBW)||(fbh!=FBH)) {
     fprintf(stderr,"Framebuffer mismatch! header=%dx%d metadata=%dx%d\n",FBW,FBH,fbw,fbh);
     return -1;
   }
   
-  if ((g.romc=egg_get_rom(0,0))<=0) return -1;
+  if ((g.romc=egg_rom_get(0,0))<=0) return -1;
   if (!(g.rom=malloc(g.romc))) return -1;
-  if (egg_get_rom(g.rom,g.romc)!=g.romc) return -1;
-  strings_set_rom(g.rom,g.romc);
+  if (egg_rom_get(g.rom,g.romc)!=g.romc) return -1;
   
   if (!(g.font=font_new())) return -1;
   //if (font_add_image_resource(g.font,0x0020,RID_image_font9_0020)<0) return -1; // A bit too small.
-  if (font_add_image_resource(g.font,0x0020,RID_image_font_0020)<0) return -1;
+  if (font_add_image(g.font,RID_image_font_0020,0x0020)<0) return -1;
   
   if (egg_texture_load_image(g.texid_tiles=egg_texture_new(),RID_image_tiles)<0) return -1;
   
@@ -40,7 +42,7 @@ int egg_client_init() {
   
   g.fieldc=1;
   g.running=0;
-  egg_play_song(RID_song_bakers_dozen,0,1);
+  tetris_song(RID_song_bakers_dozen);
   
   return 0;
 }
@@ -75,7 +77,7 @@ static void begin_game(int level) {
   }
   
   g.running=1;
-  egg_play_song(RID_song_in_thru_the_window,0,1);
+  tetris_song(RID_song_in_thru_the_window);
 }
 
 static void cursor_activate(struct cursor *cursor) {
@@ -143,7 +145,7 @@ void egg_client_update(double elapsed) {
     }
     if (g.l.end_ack&&g.r.end_ack) {
       g.input_blackout=0.500;
-      egg_play_song(RID_song_bakers_dozen,0,1);
+      tetris_song(RID_song_bakers_dozen);
       g.running=0;
     }
     
@@ -169,4 +171,14 @@ void egg_client_render() {
   graf_reset(&g.graf);
   render();
   graf_flush(&g.graf);
+}
+
+void tetris_song(int rid) {
+  if (rid==g.song_playing) return;
+  g.song_playing=rid;
+  egg_play_song(1,rid,1,0.5f,0.0f);
+}
+
+void tetris_sound(int rid) {
+  egg_play_sound(rid,1.0f,0.0f);
 }

@@ -180,7 +180,7 @@ static int player_fall(struct field *field,struct player *player) {
         }
         player->y--;
         player_commit_piece(field,player);
-        egg_play_sound(RID_sound_dropped);
+        tetris_sound(RID_sound_dropped);
         player->dropc=0;
       } return 0;
     case COLLIDE_WALL: // Wall shouldn't be possible on a vertical move.
@@ -198,7 +198,7 @@ static int player_fall(struct field *field,struct player *player) {
  
 static void player_rotate(struct field *field,struct player *player,int d) {
   #define HOW_BOUT_NOW { if (!player_collision(field,player)) { \
-    egg_play_sound(RID_sound_rotate); \
+    tetris_sound(RID_sound_rotate); \
     return; \
   }}
   player->xform+=d;
@@ -215,7 +215,7 @@ static void player_rotate(struct field *field,struct player *player,int d) {
 
   player->x=x0;
   player->xform-=d;
-  egg_play_sound(RID_sound_reject);
+  tetris_sound(RID_sound_reject);
   #undef HOW_BOUT_NOW
 }
 
@@ -236,7 +236,7 @@ static void player_move(struct field *field,struct player *player,int d) {
     player->motionclock=MOTION_TIME-0.001;
     player->x-=d;
   } else {
-    egg_play_sound(RID_sound_motion);
+    tetris_sound(RID_sound_motion);
   }
 }
 
@@ -291,8 +291,8 @@ static void field_check_cells(struct field *field) {
   
   field->rmclock=RMANIMTIME;
   switch (lines_scored) {
-    case 1: case 2: case 3: egg_play_sound(RID_sound_lines); break;
-    default: egg_play_sound(RID_sound_tetris); break;
+    case 1: case 2: case 3: tetris_sound(RID_sound_lines); break;
+    default: tetris_sound(RID_sound_tetris); break;
   }
   
   /* If the new lines advance us to another level, they are scored against the new level's constants.
@@ -447,7 +447,7 @@ static void field_update_players(struct field *field,double elapsed) {
     if (player->tetr<0) {
       int err=player_draw(field,player);
       if (err<0) {
-        egg_play_sound(RID_sound_fatal);
+        tetris_sound(RID_sound_fatal);
         field->finished=1;
         int linec=field->linec[0]+field->linec[1]*2+field->linec[2]*3+field->linec[3]*4;
         db_add(field->playerc,linec,field->score);
