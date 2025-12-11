@@ -210,6 +210,7 @@ void egg_client_render() {
       struct egg_render_uniform un={
         .dsttexid=1,
         .srctexid=g.texid,
+        .mode=EGG_RENDER_TRIANGLE_STRIP,
         .alpha=0xff,
       };
       egg_render(&un,vtxv,sizeof(vtxv));

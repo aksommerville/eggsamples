@@ -2,6 +2,9 @@
 
 Requires [Egg v2](https://github.com/aksommerville/egg2) to build.
 
+Songs and sound effects were not revoiced in the v2 conversion.
+So they all sound kind of plain, would need some attention if we wanted to do things right.
+
 ## Differences from NES Tetris
 
 - Different graphics and sound, obviously.

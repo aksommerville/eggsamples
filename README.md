@@ -1,14 +1,15 @@
 # Eggsamples
 
-Little games for [Egg](https://github.com/aksommerville/egg), for demonstration.
+Little games for [Egg](https://github.com/aksommerville/egg2), for demonstration.
 
 Everything here was made by AK Sommerville and is explicitly placed in the public domain.
 Feel free to eggstract any bits you might find useful.
 
 With Egg installed, a simple `make` here will build all the games.
-If that fails, confirm that `...egg/out/eggdev` exists, and check your `EGG_SDK` environment variable.
+If that fails, confirm that `../egg2/out/eggdev` exists, and check your `EGG_SDK` environment variable.
 
-`make playables` to build everything and also copy out all the HTML, for serving out of this repo.
+`make playables` to build everything and also copy out all the web builds, for serving out of this repo.
+`make serve` to serve the playables locally.
 
 ## The Games
 
@@ -38,9 +39,14 @@ Incomplete, but surely completable.
 These are the first things that I'm migrating from Egg v1 to Egg v2.
 So really not sure yet exactly what the migration entails.
 
-- Makefile are substantially different. Copy from any v2 boilerplate project. In v2 we normally keep the stock the Makefile.
-- shared_symbols.h: `#define EGGDEV_importUtil "res,font,graf,stdlib"`
-- "egg_rom_toc.h" => "egg_res_toc.h". duh oops.
+...after completing: Migration isn't that bad. Mostly it's a bunch of rephrasing `graf` calls.
+We don't have a equivalent for the v1 `strings` unit. (rpg uses it but I stubbed that out).
+That's going to bite us at Spelling Bee. Possibly others.
+Leaving these notes in place until all the v1 games are migrated.
+
+- Makefile are substantially different. Copy from any v2 boilerplate project. In v2 we normally keep the stock Makefile.
+- `shared_symbols.h`: `#define EGGDEV_importUtil "res,font,graf,stdlib"`
+- `egg_rom_toc.h` => `egg_res_toc.h`. duh oops.
 - "include opt..." => "include util..." as needed.
 - `egg_play_song(rid,force,repeat)` => `egg_play_song(songid,rid,repeat,trim,pan)`. Add a global client-side wrapper to avoid restarting.
 - `egg_play_sound(rid)` => `egg_play_sound(rid,trim,pan)`.
@@ -60,8 +66,8 @@ So really not sure yet exactly what the migration entails.
 - [x] snake
 - [x] eggsweeper
 - [x] rpg
-- [s] tetris
-- [ ] Then update docs and such.
+- [x] tetris
+- [x] Then update docs and such.
 
 - Implement some well-known styles, building out specific framework as needed:
 - - [x] Formal RPG
