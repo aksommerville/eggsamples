@@ -20,6 +20,7 @@ struct world; // game/world/world.h
 #include "util/graf/graf.h"
 #include "util/font/font.h"
 #include "util/res/res.h"
+#include "util/text/text.h"
 #include "egg_res_toc.h"
 #include "shared_symbols.h"
 #include "layer/layer.h"
@@ -46,7 +47,6 @@ extern struct g {
 int rpg_res_init();
 int rpg_res_get(void *dstpp,int tid,int rid);
 struct map *rpg_map_get(int rid);
-int strings_get(void *dstpp,int rid,int strix);
 
 /* Helpers for scalar direction, converting to and from deltas.
  */

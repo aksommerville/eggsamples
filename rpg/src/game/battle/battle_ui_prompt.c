@@ -104,48 +104,43 @@ void prompt_set_text(struct prompt *prompt,const char *src,int srcc) {
 
 void prompt_set_res(struct prompt *prompt,int rid,int ix) {
   const char *src=0;
-  int srcc=strings_get(&src,rid,ix);
+  int srcc=text_get_string(&src,rid,ix);
   prompt_set_text(prompt,src,srcc);
 }
 
 void prompt_set_res_iii(struct prompt *prompt,int rid,int ix,int a,int b,int c) {
-  const char *tmp=__func__; int tmpc=-1;/*TODO
-  struct strings_insertion insv[]={
+  struct text_insertion insv[]={
     {'i',.i=a},
     {'i',.i=b},
     {'i',.i=c},
   };
   char tmp[64];
-  int tmpc=strings_format(tmp,sizeof(tmp),rid,ix,insv,sizeof(insv)/sizeof(insv[0]));
+  int tmpc=text_format_res(tmp,sizeof(tmp),rid,ix,insv,sizeof(insv)/sizeof(insv[0]));
   if (tmpc<0) tmpc=0; else if (tmpc>sizeof(tmp)) tmpc=sizeof(tmp);
-  /**/
   prompt_set_text(prompt,tmp,tmpc);
 }
 
 void prompt_set_res_sss(struct prompt *prompt,int rid,int ix,const char *a,int ac,const char *b,int bc,const char *c,int cc) {
-  const char *tmp=__func__; int tmpc=-1;/*TODO
-  struct strings_insertion insv[]={
+  struct text_insertion insv[]={
     {'s',.s={a,ac}},
     {'s',.s={b,bc}},
     {'s',.s={c,cc}},
   };
   char tmp[64];
-  int tmpc=strings_format(tmp,sizeof(tmp),rid,ix,insv,sizeof(insv)/sizeof(insv[0]));
+  int tmpc=text_format_res(tmp,sizeof(tmp),rid,ix,insv,sizeof(insv)/sizeof(insv[0]));
   if (tmpc<0) tmpc=0; else if (tmpc>sizeof(tmp)) tmpc=sizeof(tmp);
   /**/
   prompt_set_text(prompt,tmp,tmpc);
 }
 
 void prompt_set_res_sis(struct prompt *prompt,int rid,int ix,const char *a,int ac,int b,const char *c,int cc) {
-  const char *tmp=__func__; int tmpc=-1;/*TODO
-  struct strings_insertion insv[]={
+  struct text_insertion insv[]={
     {'s',.s={a,ac}},
     {'i',.i=b},
     {'s',.s={c,cc}},
   };
   char tmp[64];
-  int tmpc=strings_format(tmp,sizeof(tmp),rid,ix,insv,sizeof(insv)/sizeof(insv[0]));
+  int tmpc=text_format_res(tmp,sizeof(tmp),rid,ix,insv,sizeof(insv)/sizeof(insv[0]));
   if (tmpc<0) tmpc=0; else if (tmpc>sizeof(tmp)) tmpc=sizeof(tmp);
-  /**/
   prompt_set_text(prompt,tmp,tmpc);
 }

@@ -158,7 +158,7 @@ static int battle_add_fighter_res(struct battle *battle,struct team *team,int fi
       case CMD_fighter_name: {
           int rid=(cmd.arg[0]<<8)|cmd.arg[1];
           int ix=(cmd.arg[2]<<8)|cmd.arg[3];
-          namec=strings_get(&name,rid,ix);
+          namec=text_get_string(&name,rid,ix);
         } break;
       case CMD_fighter_image: {
           imageid=(cmd.arg[0]<<8)|cmd.arg[1];
@@ -194,7 +194,7 @@ static int battle_add_global_fighter(struct battle *battle,struct team *team,str
   fighter->hpmax=world->state.hpmax;
   //TODO Stats, inventory... Copy from world.
   const char *name=0;
-  int namec=strings_get(&name,RID_strings_battle,11);
+  int namec=text_get_string(&name,RID_strings_battle,11);
   if (namec>sizeof(fighter->name)) namec=sizeof(fighter->name);
   memcpy(fighter->name,name,namec);
   fighter->namec=namec;

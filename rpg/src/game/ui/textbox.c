@@ -100,7 +100,7 @@ int textbox_set_option(struct textbox *textbox,int col,int row,const char *text,
  
 int textbox_set_option_string(struct textbox *textbox,int col,int row,int rid,int ix,uint8_t align,int enable) {
   const char *src=0;
-  int srcc=strings_get(&src,rid,ix);
+  int srcc=text_get_string(&src,rid,ix);
   if (srcc<0) srcc=0;
   return textbox_set_option(textbox,col,row,src,srcc,align,enable);
 }

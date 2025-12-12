@@ -127,6 +127,7 @@ int rpg_res_init() {
   if ((gres.romc=egg_rom_get(0,0))<=0) return -1;
   if (!(gres.rom=malloc(gres.romc))) return -1;
   if (egg_rom_get(gres.rom,gres.romc)!=gres.romc) return -1;
+  text_set_rom(gres.rom,gres.romc);
   
   /* Build up the raw TOC, and instantiate and store interesting objects.
    */
@@ -189,28 +190,6 @@ int rpg_res_get(void *dstpp,int tid,int rid) {
     else {
       *(const void**)dstpp=res->v;
       return res->c;
-    }
-  }
-  return 0;
-}
-
-/* Get string.
- */
- 
-int strings_get(void *dstpp,int rid,int strix) {
-  if (rid<1) return 0;
-  if (strix<1) return 0;
-  if (rid<0x40) rid|=egg_prefs_get(EGG_PREF_LANG)<<6;
-  const void *serial=0;
-  int serialc=rpg_res_get(&serial,EGG_TID_strings,rid);
-  struct strings_reader reader;
-  if (strings_reader_init(&reader,serial,serialc)<0) return 0;
-  struct strings_entry entry;
-  while (strings_reader_next(&entry,&reader)>0) {
-    if (entry.index>strix) return 0;
-    if (entry.index==strix) {
-      *(const void**)dstpp=entry.v;
-      return entry.c;
     }
   }
   return 0;

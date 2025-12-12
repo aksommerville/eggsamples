@@ -122,7 +122,7 @@ void button_setup_text(struct button *button,const char *src,int srcc,uint32_t r
 void button_setup_string(struct button *button,int rid,int index,uint32_t rgba) {
   if (!button) return;
   const char *src=0;
-  int srcc=strings_get(&src,rid,index);
+  int srcc=text_get_string(&src,rid,index);
   int texid=font_render_to_texture(0,g.font,src,srcc,FBW,font_get_line_height(g.font),rgba);
   if (texid<1) return;
   button->rendermode='d';
